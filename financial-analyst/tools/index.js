@@ -1,6 +1,7 @@
 // Tool Registry and Executor - Google Sheets with Aleph format
 
 const sheetsClient = require('./google-sheets-consolidated');
+const charts = require('./charts');
 
 // Map tool names to their implementations
 const toolImplementations = {
@@ -95,6 +96,46 @@ const toolImplementations = {
     } catch (error) {
       return {
         error: `Failed to perform variance analysis: ${error.message}`,
+        is_error: true
+      };
+    }
+  },
+
+  // Generate a chart image
+  'generate_chart': async (input) => {
+    const { chart_type, title, labels, values, budget_values, actual_values } = input;
+
+    try {
+      let chartUrl;
+
+      switch (chart_type) {
+        case 'bar':
+          chartUrl = charts.barChart({ title, labels, values });
+          break;
+        case 'line':
+          chartUrl = charts.lineChart({ title, labels, values });
+          break;
+        case 'comparison':
+          chartUrl = charts.comparisonChart({
+            title,
+            labels,
+            budgetValues: budget_values,
+            actualValues: actual_values
+          });
+          break;
+        default:
+          chartUrl = charts.barChart({ title, labels, values });
+      }
+
+      return {
+        chart_url: chartUrl,
+        chart_type,
+        title,
+        instruction: 'Include this URL in your response. Slack will render it as an image.'
+      };
+    } catch (error) {
+      return {
+        error: `Failed to generate chart: ${error.message}`,
         is_error: true
       };
     }

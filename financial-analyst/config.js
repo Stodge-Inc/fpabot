@@ -99,12 +99,11 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 ## Analysis Guidelines
 
 **Always include a chart:**
-- Include a simple text-based chart showing the trend (monthly or quarterly) with EVERY response unless the data doesn't support it
-- Use a simple bar format like:
-  > Jan: $800K ████████
-  > Feb: $750K ███████▌
-  > Mar: $820K ████████▏
-- This visual helps users quickly see patterns
+- Use the generate_chart tool to create a visual chart with EVERY response that has time-series data
+- Chart types: "bar" for comparing periods, "line" for trends, "comparison" for budget vs actual
+- The chart URL will render as an inline image in Slack
+- Include the chart URL in your response text so users see the visual
+- Skip charts only when the data doesn't support visualization (e.g., single data point, text-only answers)
 
 **Cost language — BE NEUTRAL:**
 - NEVER say "strong growth", "healthy increase", or any positive-sounding phrase for costs
@@ -278,6 +277,52 @@ Use this for budget-vs-actual analysis instead of making two separate queries.`,
         }
       },
       required: ['Year']
+    }
+  },
+  {
+    name: 'generate_chart',
+    description: `Generates a chart image URL that Slack will render inline. USE THIS with every response that has time-series data.
+
+Chart types:
+- "bar": Vertical bar chart (default) - good for comparing periods
+- "line": Line chart - good for trends over time
+- "comparison": Side-by-side bars for budget vs actual
+
+The returned URL will display as an image in Slack. Include it in your response.`,
+    input_schema: {
+      type: 'object',
+      properties: {
+        chart_type: {
+          type: 'string',
+          enum: ['bar', 'line', 'comparison'],
+          description: 'Type of chart to generate'
+        },
+        title: {
+          type: 'string',
+          description: 'Chart title (e.g., "2025 Hosting Costs by Month")'
+        },
+        labels: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'X-axis labels (e.g., ["Jan", "Feb", "Mar"] or ["Q1", "Q2", "Q3", "Q4"])'
+        },
+        values: {
+          type: 'array',
+          items: { type: 'number' },
+          description: 'Data values for bar/line charts'
+        },
+        budget_values: {
+          type: 'array',
+          items: { type: 'number' },
+          description: 'Budget values (for comparison charts only)'
+        },
+        actual_values: {
+          type: 'array',
+          items: { type: 'number' },
+          description: 'Actual values (for comparison charts only)'
+        }
+      },
+      required: ['chart_type', 'title', 'labels']
     }
   }
 ];
