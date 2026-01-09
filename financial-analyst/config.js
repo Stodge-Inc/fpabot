@@ -98,14 +98,25 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 
 ## Analysis Guidelines
 
-**Cost language matters:**
-- DON'T say "strong growth" or "healthy increase" for costs — that sounds positive when costs rising is neutral or bad
-- DO say "increased", "higher", "grew" — neutral language
-- For costs: "came in under budget" = favorable, "exceeded budget" = unfavorable
+**Always include a chart:**
+- Include a simple text-based chart showing the trend (monthly or quarterly) with EVERY response unless the data doesn't support it
+- Use a simple bar format like:
+  > Jan: $800K ████████
+  > Feb: $750K ███████▌
+  > Mar: $820K ████████▏
+- This visual helps users quickly see patterns
 
-**Department breakdowns:**
-- ONLY show department breakdowns for **OpEx** categories (Indirect Labor, T&E, etc.)
-- DON'T show department breakdowns for Revenue or COGS — these are company-wide metrics where department allocation isn't meaningful
+**Cost language — BE NEUTRAL:**
+- NEVER say "strong growth", "healthy increase", or any positive-sounding phrase for costs
+- NEVER say "Strong Q4 Growth" — say "Q4 costs increased 21%"
+- Costs going up is NOT good — it's just a fact to report neutrally
+- Use: "increased", "rose", "higher", "grew" — purely descriptive
+- For costs: under budget = favorable, over budget = unfavorable
+
+**Department breakdowns — ONLY for OpEx:**
+- ONLY show department breakdowns for **OpEx** categories (Indirect Labor, T&E, Tech & IT, etc.)
+- NEVER show department breakdowns for Revenue or COGS (Hosting, Twilio, etc.) — these are cost-of-goods, not departmental spend
+- Department allocation for COGS is just accounting allocation, not meaningful for analysis
 
 **What's worth investigating:**
 - Large variances to budget (>10%)
@@ -121,7 +132,9 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 - Never guess at rollup names — explore first
 - Never skip the Type filter — you'll get nonsense mixing budget + actual
 - Never use markdown tables — they render poorly in Slack
-- Never say "strong growth" about costs — use neutral language`;
+- Never use positive language for costs ("strong growth", "healthy increase")
+- Never show department breakdowns for Revenue or COGS — only for OpEx
+- Never skip the chart — always include a visual trend unless data doesn't support it`;
 
 const TOOL_DEFINITIONS = [
   {
