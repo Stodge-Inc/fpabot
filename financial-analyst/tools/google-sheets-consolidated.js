@@ -21,21 +21,8 @@ const TAB_CONFIGS = {
       year: 'Year'
     }
   },
-  '2025 Budget - Income Statement': {
-    type: 'budget',
-    statement: 'income_statement',
-    headerRow: 14,
-    columns: {
-      account: 'Account',
-      vendor: 'Vendor',
-      department: 'Department Aleph',
-      rollup: 'Consolidated Rollup Aleph',
-      month: 'Month',
-      value: 'value',
-      quarter: 'Quarter',
-      year: 'Year'
-    }
-  },
+  // NOTE: '2025 Budget - Income Statement' tab REMOVED - it contains duplicate 2026 data
+  // which was causing doubled values when querying 2026 budget
   'Actuals - Income Statement': {
     type: 'actuals',
     statement: 'income_statement',
@@ -63,19 +50,7 @@ const TAB_CONFIGS = {
       year: 'Year'
     }
   },
-  '2025 Budget - Balance Sheet': {
-    type: 'budget',
-    statement: 'balance_sheet',
-    headerRow: 14,
-    columns: {
-      account: 'Account',
-      rollup: 'Consolidated Rollup Aleph',
-      month: 'Month',
-      value: 'value',
-      quarter: 'Quarter',
-      year: 'Year'
-    }
-  },
+  // NOTE: '2025 Budget - Balance Sheet' tab REMOVED - it contains duplicate 2026 data
   'Actuals - Balance Sheet': {
     type: 'actuals',
     statement: 'balance_sheet',
