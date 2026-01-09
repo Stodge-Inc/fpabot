@@ -316,7 +316,14 @@ class GoogleSheetsClient {
       data.push(record);
     }
 
-    console.log(`[Sheets] Loaded ${data.length} rows from ${tabName}`);
+    // Debug: show year distribution in this tab
+    const yearCounts = {};
+    for (const row of data) {
+      const year = row.year || 'null';
+      yearCounts[year] = (yearCounts[year] || 0) + 1;
+    }
+    console.log(`[Sheets] Loaded ${data.length} rows from ${tabName}, years:`, JSON.stringify(yearCounts));
+
     this.cachedTabs[cacheKey] = data;
     this.cacheTime = Date.now();
 
