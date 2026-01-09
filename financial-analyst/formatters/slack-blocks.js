@@ -47,16 +47,13 @@ function formatResponse(text) {
   // Add divider before footer
   blocks.push({ type: 'divider' });
 
-  // Add footer with timestamp
+  // Add footer with timestamp (using Slack's date formatting for viewer's timezone)
+  const unixTimestamp = Math.floor(Date.now() / 1000);
   blocks.push({
     type: 'context',
     elements: [{
       type: 'mrkdwn',
-      text: `:chart_with_upwards_trend: Analysis generated at ${new Date().toLocaleString('en-US', {
-        timeZone: 'America/Los_Angeles',
-        dateStyle: 'medium',
-        timeStyle: 'short'
-      })}`
+      text: `:chart_with_upwards_trend: Analysis generated <!date^${unixTimestamp}^{date_short} at {time}|${new Date().toISOString()}>`
     }]
   });
 

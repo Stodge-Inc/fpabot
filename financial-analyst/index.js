@@ -70,6 +70,7 @@ async function analyze(question, context = {}) {
 
   // Get existing conversation history for this thread
   const existingMessages = getConversation(threadTs);
+  console.log(`[FPA Bot] Thread ${threadTs}: Found ${existingMessages.length} existing messages in conversation`);
 
   // Build messages - start with history, add new question
   const messages = [
@@ -142,13 +143,29 @@ async function analyze(question, context = {}) {
         }
 
         console.log(`[FPA Bot] Analysis complete after ${iteration} iteration(s)`);
+        console.log(`[FPA Bot] Thread ${threadTs}: Saving conversation with ${existingMessages.length} existing messages`);
 
-        // Save the final user message and assistant response for conversation continuity
-        // Only save the user's question and Claude's final text response (not tool use iterations)
+        // Build context summary of what was queried (helps Claude remember in follow-ups)
+        const toolsUsed = [];
+        for (const msg of messages) {
+          if (msg.role === 'assistant' && Array.isArray(msg.content)) {
+            for (const block of msg.content) {
+              if (block.type === 'tool_use') {
+                toolsUsed.push(`${block.name}(${JSON.stringify(block.input)})`);
+              }
+            }
+          }
+        }
+
+        // Save conversation with context about what was queried
+        const contextNote = toolsUsed.length > 0
+          ? `\n\n[Context: This analysis used these queries: ${toolsUsed.join(', ')}]`
+          : '';
+
         const conversationToSave = [
           ...existingMessages,
           { role: 'user', content: question },
-          { role: 'assistant', content: textContent }
+          { role: 'assistant', content: textContent + contextNote }
         ];
         saveConversation(threadTs, conversationToSave);
 
