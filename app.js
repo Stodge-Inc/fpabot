@@ -4,6 +4,7 @@
 const { App } = require('@slack/bolt');
 const http = require('http');
 const financialAnalyst = require('./financial-analyst');
+const chartStorage = require('./financial-analyst/tools/chart-storage');
 
 // Initialize Slack app with Socket Mode
 const app = new App({
@@ -13,15 +14,40 @@ const app = new App({
   // Disable built-in event acknowledgment for custom handling
 });
 
-// HTTP server for Heroku health checks
-const server = http.createServer((req, res) => {
+// HTTP server for health checks and chart serving
+const server = http.createServer(async (req, res) => {
+  // Health check endpoints
   if (req.url === '/health' || req.url === '/') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ status: 'ok', bot: 'fpabot' }));
-  } else {
-    res.writeHead(404);
-    res.end('Not found');
+    return;
   }
+
+  // Chart image endpoint: /chart/{id}.png
+  const chartMatch = req.url.match(/^\/chart\/([a-f0-9-]+)\.png$/i);
+  if (chartMatch) {
+    const chartId = chartMatch[1];
+    try {
+      const chart = await chartStorage.get(chartId);
+      if (chart) {
+        res.writeHead(200, {
+          'Content-Type': chart.contentType || 'image/png',
+          'Cache-Control': 'public, max-age=86400' // Cache for 24 hours
+        });
+        res.end(chart.data);
+        return;
+      }
+    } catch (error) {
+      console.error('[Chart] Error serving chart:', error.message);
+    }
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Chart not found');
+    return;
+  }
+
+  // 404 for everything else
+  res.writeHead(404);
+  res.end('Not found');
 });
 
 // Allowed channels (comma-separated channel IDs in env var)

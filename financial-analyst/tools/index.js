@@ -1,7 +1,8 @@
 // Tool Registry and Executor - Google Sheets with Aleph format
 
 const sheetsClient = require('./google-sheets-consolidated');
-const charts = require('./charts');
+const vegaCharts = require('./vega-charts');
+const chartStorage = require('./chart-storage');
 
 // Map tool names to their implementations
 const toolImplementations = {
@@ -101,22 +102,23 @@ const toolImplementations = {
     }
   },
 
-  // Generate a chart image
+  // Generate a chart image using Vega-Lite
   'generate_chart': async (input) => {
     const { chart_type, title, labels, values, budget_values, actual_values } = input;
 
     try {
-      let chartUrl;
+      // Create Vega-Lite spec based on chart type
+      let spec;
 
       switch (chart_type) {
         case 'bar':
-          chartUrl = charts.barChart({ title, labels, values });
+          spec = vegaCharts.barChartSpec({ title, labels, values });
           break;
         case 'line':
-          chartUrl = charts.lineChart({ title, labels, values });
+          spec = vegaCharts.lineChartSpec({ title, labels, values });
           break;
         case 'comparison':
-          chartUrl = charts.comparisonChart({
+          spec = vegaCharts.comparisonChartSpec({
             title,
             labels,
             budgetValues: budget_values,
@@ -124,8 +126,21 @@ const toolImplementations = {
           });
           break;
         default:
-          chartUrl = charts.barChart({ title, labels, values });
+          spec = vegaCharts.barChartSpec({ title, labels, values });
       }
+
+      // Render to PNG
+      const pngBuffer = await vegaCharts.renderToPng(spec);
+
+      // Generate unique ID and store in Postgres
+      const chartId = vegaCharts.generateChartId();
+      await chartStorage.store(chartId, pngBuffer);
+
+      // Build the chart URL
+      const baseUrl = process.env.APP_URL || `https://${process.env.HEROKU_APP_NAME || 'fpabot'}.herokuapp.com`;
+      const chartUrl = `${baseUrl}/chart/${chartId}.png`;
+
+      console.log(`[Charts] Generated chart: ${chartId} (${chart_type})`);
 
       return {
         chart_url: chartUrl,
@@ -134,6 +149,7 @@ const toolImplementations = {
         instruction: 'Include this URL in your response. Slack will render it as an image.'
       };
     } catch (error) {
+      console.error('[Charts] Generation error:', error);
       return {
         error: `Failed to generate chart: ${error.message}`,
         is_error: true

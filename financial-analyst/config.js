@@ -173,14 +173,17 @@ Examples:
     description: `Queries the budget/actuals data. Returns matching rows and aggregations.
 
 STRATEGY:
-- Query BROADLY first, then narrow down. The response includes rollup_totals showing sums by Rollup name.
+- Query BROADLY first - the response includes all breakdowns you need in ONE call.
 - Always specify Type ("budget" or "actuals") to avoid mixing apples and oranges.
 - For variance analysis, use the variance_analysis tool instead of making two queries.
+- DO NOT query month-by-month or quarter-by-quarter - one query returns all periods!
 
 Returns:
 - total_amount: Sum of all matching rows
 - rollup_totals: Sums by Rollup (main grouping - use this for calculations!)
-- department_totals: Sums by Department
+- monthly_totals: Sums by Month (Jan, Feb, etc.) - USE THIS FOR MONTHLY CHARTS
+- quarterly_totals: Sums by Quarter (Q1, Q2, Q3, Q4) - USE THIS FOR QUARTERLY SUMMARIES
+- department_totals: Sums by Department (only meaningful for OpEx!)
 - sample_rows: First 5 matching rows for verification
 
 Examples:

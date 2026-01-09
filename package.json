@@ -13,8 +13,11 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0",
     "@slack/bolt": "^4.1.0",
+    "canvas": "^3.2.0",
     "googleapis": "^148.0.0",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "vega": "^6.2.0",
+    "vega-lite": "^6.4.1"
   },
   "keywords": [
     "slack",
@@ -26,5 +29,8 @@
   ],
   "author": "Postscript",
   "license": "UNLICENSED",
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "dotenv": "^17.2.3"
+  }
 }

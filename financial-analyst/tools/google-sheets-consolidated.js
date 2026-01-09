@@ -4,8 +4,9 @@
 const { google } = require('googleapis');
 
 // Tab configurations - maps tab patterns to their structure
+// Tab names updated 2026-01 to match current sheet structure
 const TAB_CONFIGS = {
-  'Income Statement | Budget': {
+  '2026 Budget - Income Statement': {
     type: 'budget',
     statement: 'income_statement',
     headerRow: 14,
@@ -20,7 +21,22 @@ const TAB_CONFIGS = {
       year: 'Year'
     }
   },
-  'Income Statement | Actuals': {
+  '2025 Budget - Income Statement': {
+    type: 'budget',
+    statement: 'income_statement',
+    headerRow: 14,
+    columns: {
+      account: 'Account',
+      vendor: 'Vendor',
+      department: 'Department Aleph',
+      rollup: 'Consolidated Rollup Aleph',
+      month: 'Month',
+      value: 'value',
+      quarter: 'Quarter',
+      year: 'Year'
+    }
+  },
+  'Actuals - Income Statement': {
     type: 'actuals',
     statement: 'income_statement',
     headerRow: 14,
@@ -34,7 +50,7 @@ const TAB_CONFIGS = {
       // Quarter and Year derived from Month
     }
   },
-  'Balance Sheet | Budget': {
+  '2026 Budget - Balance Sheet': {
     type: 'budget',
     statement: 'balance_sheet',
     headerRow: 14,
@@ -47,7 +63,20 @@ const TAB_CONFIGS = {
       year: 'Year'
     }
   },
-  'Balance Sheet | Actuals': {
+  '2025 Budget - Balance Sheet': {
+    type: 'budget',
+    statement: 'balance_sheet',
+    headerRow: 14,
+    columns: {
+      account: 'Account',
+      rollup: 'Consolidated Rollup Aleph',
+      month: 'Month',
+      value: 'value',
+      quarter: 'Quarter',
+      year: 'Year'
+    }
+  },
+  'Actuals - Balance Sheet': {
     type: 'actuals',
     statement: 'balance_sheet',
     headerRow: 14,
@@ -59,7 +88,7 @@ const TAB_CONFIGS = {
       // Quarter and Year derived from Month
     }
   },
-  'Metrics | Budget': {
+  '2026 Budget and pre-2026 Actuals - Metrics': {
     type: 'metrics', // Special handling - past periods are actuals, future are budget
     statement: 'metrics',
     headerRow: 14,
@@ -431,6 +460,37 @@ class GoogleSheetsClient {
       }
     }
 
+    // Aggregate by month (ordered)
+    const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthlyTotalsRaw = {};
+    for (const row of filtered) {
+      if (row.month) {
+        monthlyTotalsRaw[row.month] = (monthlyTotalsRaw[row.month] || 0) + (row.value || 0);
+      }
+    }
+    // Sort by month order
+    const monthlyTotals = {};
+    for (const month of monthOrder) {
+      if (monthlyTotalsRaw[month] !== undefined) {
+        monthlyTotals[month] = monthlyTotalsRaw[month];
+      }
+    }
+
+    // Aggregate by quarter (ordered)
+    const quarterOrder = ['Q1', 'Q2', 'Q3', 'Q4'];
+    const quarterlyTotalsRaw = {};
+    for (const row of filtered) {
+      if (row.quarter) {
+        quarterlyTotalsRaw[row.quarter] = (quarterlyTotalsRaw[row.quarter] || 0) + (row.value || 0);
+      }
+    }
+    const quarterlyTotals = {};
+    for (const q of quarterOrder) {
+      if (quarterlyTotalsRaw[q] !== undefined) {
+        quarterlyTotals[q] = quarterlyTotalsRaw[q];
+      }
+    }
+
     const totalAmount = filtered.reduce((sum, r) => sum + (r.value || 0), 0);
 
     return {
@@ -438,6 +498,8 @@ class GoogleSheetsClient {
       row_count: filtered.length,
       total_amount: totalAmount,
       rollup_totals: rollupTotals,
+      monthly_totals: Object.keys(monthlyTotals).length > 0 ? monthlyTotals : undefined,
+      quarterly_totals: Object.keys(quarterlyTotals).length > 0 ? quarterlyTotals : undefined,
       department_totals: Object.keys(departmentTotals).length > 0 ? departmentTotals : undefined,
       account_totals: Object.keys(accountTotals).length > 20 ? 'Too many accounts to display' : accountTotals,
       sample_rows: filtered.slice(0, 5).map(r => ({
