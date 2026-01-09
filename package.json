@@ -1,0 +1,30 @@
+{
+  "name": "fpabot",
+  "version": "1.0.0",
+  "description": "Financial Planning & Analysis Slack bot powered by Claude AI",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0",
+    "@slack/bolt": "^4.1.0",
+    "googleapis": "^148.0.0",
+    "pg": "^8.13.1"
+  },
+  "keywords": [
+    "slack",
+    "bot",
+    "fpa",
+    "finance",
+    "claude",
+    "ai"
+  ],
+  "author": "Postscript",
+  "license": "UNLICENSED",
+  "private": true
+}
