@@ -13,8 +13,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0",
     "@slack/bolt": "^4.1.0",
-    "googleapis": "^148.0.0",
-    "pg": "^8.13.1"
+    "googleapis": "^148.0.0"
   },
   "keywords": [
     "slack",

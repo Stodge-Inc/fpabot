@@ -59,7 +59,7 @@ class GoogleSheetsClient {
     }
   }
 
-  async getBudgetData({ metric, month, quarter, year, department, sheet_name, account, vendor, rollup, statement_type }) {
+  async getBudgetData({ metric, month, quarter, year, department, sheet_name, account, vendor, rollup, statement_type, _dataType }) {
     await this.initialize();
 
     const sheetId = process.env.GOOGLE_BUDGET_SHEET_ID;
@@ -72,14 +72,29 @@ class GoogleSheetsClient {
       };
     }
 
+    // Determine if we're looking for Budget or Actuals tabs
+    const dataType = _dataType || 'budget'; // 'budget' or 'actuals'
+    const dataTypeLabel = dataType === 'actuals' ? 'Actuals' : 'Budget';
+
     try {
       // First, get available tabs
       const tabsResponse = await this.sheets.spreadsheets.get({
         spreadsheetId: sheetId,
         fields: 'sheets.properties.title'
       });
-      const availableTabs = tabsResponse.data.sheets.map(s => s.properties.title);
-      console.log(`[Sheets] Available tabs: ${availableTabs.join(', ')}`);
+      const allTabs = tabsResponse.data.sheets.map(s => s.properties.title);
+
+      // Filter tabs to only Budget or Actuals based on dataType
+      const availableTabs = allTabs.filter(tab => {
+        const tabLower = tab.toLowerCase();
+        if (dataType === 'actuals') {
+          return tabLower.includes('actuals');
+        } else {
+          return tabLower.includes('budget') && !tabLower.includes('actuals');
+        }
+      });
+
+      console.log(`[Sheets] Looking for ${dataTypeLabel} tabs. Available: ${availableTabs.join(', ')}`);
 
       // Smart tab selection based on what's being searched
       let targetSheet = sheet_name;
@@ -445,6 +460,22 @@ class GoogleSheetsClient {
     }
   }
 
+  /**
+   * Get actuals data - same spreadsheet as budget, but queries "Actuals" tabs
+   */
+  async getActualsData(params) {
+    // Add a flag to indicate we want actuals tabs, then use the same parsing logic
+    const actualsParams = { ...params, _dataType: 'actuals' };
+    const result = await this.getBudgetData(actualsParams);
+
+    // Update source label
+    if (!result.is_error) {
+      result.source = 'Google Sheets - Actuals';
+    }
+
+    return result;
+  }
+
   async getFinancialModel({ data_type, scenario, metric, period }) {
     await this.initialize();
 
@@ -546,30 +577,34 @@ class GoogleSheetsClient {
     const results = {};
 
     try {
-      if (sheet_type === 'budget' || sheet_type === 'all') {
-        const budgetSheetId = process.env.GOOGLE_BUDGET_SHEET_ID;
-        if (budgetSheetId) {
-          const response = await this.sheets.spreadsheets.get({
-            spreadsheetId: budgetSheetId,
-            fields: 'sheets.properties.title'
-          });
+      const sheetId = process.env.GOOGLE_BUDGET_SHEET_ID;
+      if (sheetId) {
+        const response = await this.sheets.spreadsheets.get({
+          spreadsheetId: sheetId,
+          fields: 'sheets.properties.title'
+        });
+        const allTabs = response.data.sheets.map(s => s.properties.title);
+
+        // Categorize tabs
+        const budgetTabs = allTabs.filter(t => t.toLowerCase().includes('budget'));
+        const actualsTabs = allTabs.filter(t => t.toLowerCase().includes('actuals'));
+        const otherTabs = allTabs.filter(t => !t.toLowerCase().includes('budget') && !t.toLowerCase().includes('actuals'));
+
+        if (sheet_type === 'budget' || sheet_type === 'all') {
           results.budget = {
-            sheet_id: budgetSheetId,
-            tabs: response.data.sheets.map(s => s.properties.title)
+            tabs: budgetTabs
           };
         }
-      }
 
-      if (sheet_type === 'model' || sheet_type === 'all') {
-        const modelSheetId = process.env.GOOGLE_FINANCIAL_MODEL_SHEET_ID;
-        if (modelSheetId) {
-          const response = await this.sheets.spreadsheets.get({
-            spreadsheetId: modelSheetId,
-            fields: 'sheets.properties.title'
-          });
-          results.model = {
-            sheet_id: modelSheetId,
-            tabs: response.data.sheets.map(s => s.properties.title)
+        if (sheet_type === 'actuals' || sheet_type === 'all') {
+          results.actuals = {
+            tabs: actualsTabs
+          };
+        }
+
+        if (sheet_type === 'all' && otherTabs.length > 0) {
+          results.other = {
+            tabs: otherTabs
           };
         }
       }
