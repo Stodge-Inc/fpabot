@@ -390,6 +390,10 @@ Chart types:
 - "line": Line chart - good for trends over time
 - "comparison": Side-by-side bars for budget vs actual
 
+Format:
+- "currency": Dollar formatting ($1.2M, $500K) - DEFAULT for revenue, costs, profits
+- "percent": Percentage formatting (74.5%) - USE THIS for margins, ratios, percentages
+
 The returned URL will display as an image in Slack. Include it in your response.`,
     input_schema: {
       type: 'object',
@@ -422,6 +426,11 @@ The returned URL will display as an image in Slack. Include it in your response.
           type: 'array',
           items: { type: 'number' },
           description: 'Actual values (for comparison charts only)'
+        },
+        format: {
+          type: 'string',
+          enum: ['currency', 'percent'],
+          description: 'Value format: "currency" for dollars (default), "percent" for percentages like margins'
         }
       },
       required: ['chart_type', 'title', 'labels']

@@ -51,15 +51,36 @@ function formatCurrency(value) {
 }
 
 /**
- * Create a bar chart spec with data labels
+ * Format percentage value for display
  */
-function barChartSpec({ title, labels, values }) {
+function formatPercent(value) {
+  return value.toFixed(1) + '%';
+}
+
+/**
+ * Format value based on format type
+ */
+function formatValue(value, format = 'currency') {
+  if (format === 'percent') return formatPercent(value);
+  return formatCurrency(value);
+}
+
+/**
+ * Create a bar chart spec with data labels
+ * @param {string} format - 'currency' (default) or 'percent'
+ */
+function barChartSpec({ title, labels, values, format = 'currency' }) {
   // Pre-format the labels for display
   const data = labels.map((label, i) => ({
     category: label,
     value: values[i],
-    label: formatCurrency(values[i])
+    label: formatValue(values[i], format)
   }));
+
+  // Y-axis label expression based on format
+  const yAxisLabelExpr = format === 'percent'
+    ? "datum.value + '%'"
+    : "datum.value >= 1000000 ? '$' + datum.value/1000000 + 'M' : datum.value >= 1000 ? '$' + datum.value/1000 + 'K' : '$' + datum.value";
 
   return {
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
@@ -107,12 +128,12 @@ function barChartSpec({ title, labels, values }) {
               gridColor: '#E5E7EB',
               tickColor: '#E5E7EB',
               domainColor: '#E5E7EB',
-              labelExpr: "datum.value >= 1000000 ? '$' + datum.value/1000000 + 'M' : datum.value >= 1000 ? '$' + datum.value/1000 + 'K' : '$' + datum.value"
+              labelExpr: yAxisLabelExpr
             }
           },
           tooltip: [
             { field: 'category', type: 'nominal', title: 'Period' },
-            { field: 'value', type: 'quantitative', title: 'Amount', format: '$,.0f' }
+            { field: 'label', type: 'nominal', title: format === 'percent' ? 'Percentage' : 'Amount' }
           ]
         }
       },
@@ -140,12 +161,18 @@ function barChartSpec({ title, labels, values }) {
 
 /**
  * Create a line chart spec
+ * @param {string} format - 'currency' (default) or 'percent'
  */
-function lineChartSpec({ title, labels, values }) {
+function lineChartSpec({ title, labels, values, format = 'currency' }) {
   const data = labels.map((label, i) => ({
     category: label,
-    value: values[i]
+    value: values[i],
+    label: formatValue(values[i], format)
   }));
+
+  const yAxisLabelExpr = format === 'percent'
+    ? "datum.value + '%'"
+    : "datum.value >= 1000000 ? '$' + datum.value/1000000 + 'M' : datum.value >= 1000 ? '$' + datum.value/1000 + 'K' : '$' + datum.value";
 
   return {
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
@@ -193,7 +220,7 @@ function lineChartSpec({ title, labels, values }) {
               gridColor: '#E5E7EB',
               tickColor: '#E5E7EB',
               domainColor: '#E5E7EB',
-              labelExpr: "datum.value >= 1000000 ? '$' + datum.value/1000000 + 'M' : datum.value >= 1000 ? '$' + datum.value/1000 + 'K' : '$' + datum.value"
+              labelExpr: yAxisLabelExpr
             }
           }
         }
@@ -212,7 +239,7 @@ function lineChartSpec({ title, labels, values }) {
           y: { field: 'value', type: 'quantitative' },
           tooltip: [
             { field: 'category', type: 'nominal', title: 'Period' },
-            { field: 'value', type: 'quantitative', title: 'Amount', format: '$,.0f' }
+            { field: 'label', type: 'nominal', title: format === 'percent' ? 'Percentage' : 'Amount' }
           ]
         }
       }
@@ -225,13 +252,18 @@ function lineChartSpec({ title, labels, values }) {
 
 /**
  * Create a comparison (budget vs actual) bar chart spec with data labels
+ * @param {string} format - 'currency' (default) or 'percent'
  */
-function comparisonChartSpec({ title, labels, budgetValues, actualValues }) {
+function comparisonChartSpec({ title, labels, budgetValues, actualValues, format = 'currency' }) {
   const data = [];
   labels.forEach((label, i) => {
-    data.push({ category: label, type: 'Budget', value: budgetValues[i], label: formatCurrency(budgetValues[i]) });
-    data.push({ category: label, type: 'Actual', value: actualValues[i], label: formatCurrency(actualValues[i]) });
+    data.push({ category: label, type: 'Budget', value: budgetValues[i], label: formatValue(budgetValues[i], format) });
+    data.push({ category: label, type: 'Actual', value: actualValues[i], label: formatValue(actualValues[i], format) });
   });
+
+  const yAxisLabelExpr = format === 'percent'
+    ? "datum.value + '%'"
+    : "datum.value >= 1000000 ? '$' + datum.value/1000000 + 'M' : datum.value >= 1000 ? '$' + datum.value/1000 + 'K' : '$' + datum.value";
 
   return {
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
@@ -279,7 +311,7 @@ function comparisonChartSpec({ title, labels, budgetValues, actualValues }) {
               gridColor: '#E5E7EB',
               tickColor: '#E5E7EB',
               domainColor: '#E5E7EB',
-              labelExpr: "datum.value >= 1000000 ? '$' + datum.value/1000000 + 'M' : datum.value >= 1000 ? '$' + datum.value/1000 + 'K' : '$' + datum.value"
+              labelExpr: yAxisLabelExpr
             }
           },
           color: {
@@ -301,7 +333,7 @@ function comparisonChartSpec({ title, labels, budgetValues, actualValues }) {
           tooltip: [
             { field: 'category', type: 'nominal', title: 'Period' },
             { field: 'type', type: 'nominal', title: 'Type' },
-            { field: 'value', type: 'quantitative', title: 'Amount', format: '$,.0f' }
+            { field: 'label', type: 'nominal', title: format === 'percent' ? 'Percentage' : 'Amount' }
           ]
         }
       },

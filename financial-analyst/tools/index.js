@@ -104,7 +104,7 @@ const toolImplementations = {
 
   // Generate a chart image using Vega-Lite
   'generate_chart': async (input) => {
-    const { chart_type, title, labels, values, budget_values, actual_values } = input;
+    const { chart_type, title, labels, values, budget_values, actual_values, format = 'currency' } = input;
 
     try {
       // Create Vega-Lite spec based on chart type
@@ -112,21 +112,22 @@ const toolImplementations = {
 
       switch (chart_type) {
         case 'bar':
-          spec = vegaCharts.barChartSpec({ title, labels, values });
+          spec = vegaCharts.barChartSpec({ title, labels, values, format });
           break;
         case 'line':
-          spec = vegaCharts.lineChartSpec({ title, labels, values });
+          spec = vegaCharts.lineChartSpec({ title, labels, values, format });
           break;
         case 'comparison':
           spec = vegaCharts.comparisonChartSpec({
             title,
             labels,
             budgetValues: budget_values,
-            actualValues: actual_values
+            actualValues: actual_values,
+            format
           });
           break;
         default:
-          spec = vegaCharts.barChartSpec({ title, labels, values });
+          spec = vegaCharts.barChartSpec({ title, labels, values, format });
       }
 
       // Render to PNG
