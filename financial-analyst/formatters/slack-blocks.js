@@ -8,6 +8,10 @@
 function formatResponse(text) {
   const blocks = [];
 
+  // Extract chart URLs and convert markdown images to just URLs
+  // Matches both ![alt](url) and bare quickchart.io URLs
+  text = text.replace(/!\[[^\]]*\]\((https:\/\/quickchart\.io\/chart[^)]+)\)/g, '\n$1\n');
+
   // Split text into sections by double newlines
   const sections = text.split(/\n\n+/);
 
@@ -15,8 +19,16 @@ function formatResponse(text) {
     const trimmed = section.trim();
     if (!trimmed) continue;
 
+    // Check if it's a QuickChart URL - convert to image block
+    if (trimmed.startsWith('https://quickchart.io/chart')) {
+      blocks.push({
+        type: 'image',
+        image_url: trimmed,
+        alt_text: 'Financial Chart'
+      });
+    }
     // Check if it's a markdown table
-    if (isMarkdownTable(trimmed)) {
+    else if (isMarkdownTable(trimmed)) {
       blocks.push(formatTable(trimmed));
     }
     // Check if it's a header (starts with # or **)
