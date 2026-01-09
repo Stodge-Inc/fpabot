@@ -4,7 +4,6 @@ const ClaudeClient = require('./claude-client');
 const tools = require('./tools');
 const { formatResponse, formatError } = require('./formatters/slack-blocks');
 const { SYSTEM_PROMPT, TOOL_DEFINITIONS } = require('./config');
-const dbCache = require('./db/cache');
 
 // Maximum iterations to prevent infinite tool loops
 const MAX_TOOL_ITERATIONS = 10;
@@ -27,25 +26,6 @@ function cleanupOldConversations() {
 
 // Run cleanup every 10 minutes
 setInterval(cleanupOldConversations, 10 * 60 * 1000);
-
-// Initialize database cache table on module load
-let dbInitialized = false;
-async function initializeDB() {
-  if (dbInitialized) return;
-  try {
-    await dbCache.initCacheTable();
-    dbInitialized = true;
-    console.log('[FPA Bot] Database cache table initialized');
-  } catch (error) {
-    console.error('[FPA Bot] Failed to initialize DB cache table:', error.message);
-    // Continue anyway - the app will try to create the table again on first query
-  }
-}
-
-// Initialize DB asynchronously on module load
-if (process.env.DATABASE_URL) {
-  initializeDB();
-}
 
 /**
  * Get or create conversation history for a thread
@@ -217,9 +197,7 @@ function checkConfiguration() {
     anthropic: !!process.env.ANTHROPIC_API_KEY,
     google_sheets: !!(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY),
     budget_sheet: !!process.env.GOOGLE_BUDGET_SHEET_ID,
-    model_sheet: !!process.env.GOOGLE_FINANCIAL_MODEL_SHEET_ID,
-    rillet: !!process.env.RILLET_API_KEY,
-    fpa_channel: !!process.env.FPA_CHANNEL_ID
+    fpa_channels: !!process.env.FPA_CHANNEL_IDS
   };
 }
 
