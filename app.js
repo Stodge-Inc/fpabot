@@ -134,14 +134,59 @@ app.event('app_mention', async ({ event, client, logger }) => {
 });
 
 // ============================================================================
-// THREAD REPLY HANDLER - Follow-up questions in threads
+// DM AND THREAD REPLY HANDLER - Direct messages and follow-up questions
 // ============================================================================
 app.message(async ({ message, client, logger }) => {
-  // Only process messages in threads
-  if (!message.thread_ts) return;
-
   // Ignore bot messages to prevent loops
   if (message.bot_id || message.subtype === 'bot_message') return;
+
+  // Check if this is a DM (channel ID starts with 'D')
+  const isDM = message.channel?.startsWith('D');
+
+  // For DMs, respond to any message directly
+  if (isDM) {
+    const question = message.text?.trim();
+    if (!question) return;
+
+    logger.info(`[FPA Bot] DM from ${message.user}: ${question.substring(0, 100)}...`);
+
+    // Post thinking indicator
+    const thinkingMsg = await client.chat.postMessage({
+      channel: message.channel,
+      text: ':hourglass_flowing_sand: Analyzing...'
+    });
+
+    try {
+      // Process with financial analyst
+      const response = await financialAnalyst.analyze(question, {
+        userId: message.user,
+        channelId: message.channel,
+        threadTs: message.ts
+      });
+
+      // Update thinking message with response
+      await client.chat.update({
+        channel: message.channel,
+        ts: thinkingMsg.ts,
+        text: response.text,
+        blocks: response.blocks
+      });
+
+      logger.info(`[FPA Bot] DM response sent to ${message.user}`);
+    } catch (error) {
+      logger.error('[FPA Bot] Error handling DM:', error);
+
+      await client.chat.update({
+        channel: message.channel,
+        ts: thinkingMsg.ts,
+        text: ':warning: Sorry, I encountered an error analyzing your question. Please try again.'
+      });
+    }
+    return;
+  }
+
+  // For channels: only process messages in threads
+  if (!message.thread_ts) return;
 
   // Security: Only respond in designated channels (if configured)
   if (ALLOWED_CHANNEL_IDS.length > 0 && !ALLOWED_CHANNEL_IDS.includes(message.channel)) {
