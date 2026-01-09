@@ -84,7 +84,7 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 **COGS** = Sum of ALL 8 of these rollups (DO NOT SKIP ANY):
 1. Hosting
 2. Twilio Messaging
-3. Twilio Short Codes
+3. Twilio Short Codes (see adjustment below)
 4. SMS Sales COGS
 5. Prepaid Cards
 6. Postscript Plus Servicing Costs
@@ -92,6 +92,14 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 8. MAI OpenAI Costs
 
 **IMPORTANT: You MUST include ALL 8 COGS items above. Missing any will make gross margin wrong.**
+
+**MANUAL ADJUSTMENT - Free Short Codes:**
+- We allocate ~$160K/month of Twilio Short Codes to Marketing Expense (not COGS)
+- These are "free short codes" given to customers as a sales/marketing incentive
+- When calculating COGS, subtract $160K × number of months from "Twilio Short Codes"
+- Example: For full year, subtract $1.92M ($160K × 12) from Twilio Short Codes
+- Example: For Q4, subtract $480K ($160K × 3) from Twilio Short Codes
+- ALWAYS note in your response: "*Gross margin assumes $160K/month free short code allocation to marketing expense*"
 
 **Gross Profit** = Net Revenue - COGS
 (This is a calculation, not a rollup query)
