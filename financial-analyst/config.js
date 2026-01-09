@@ -67,7 +67,9 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 
 ## Key Metrics — EXACT FORMULAS (use these rollup names precisely)
 
-**Gross Revenue** = Sum of:
+**IMPORTANT: "Net Revenue", "Gross Profit", "EBITDA" are NOT rollups in the data. You must CALCULATE them by summing the component rollups below.**
+
+**Gross Revenue** = Sum of these 7 rollups:
 - Messaging Revenue
 - Platform Revenue
 - Short Code Revenue
@@ -76,9 +78,10 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 - Fondue Revenue
 - Postscript AI Revenue
 
-**Net Revenue** = Gross Revenue - Twilio Carrier Fees
+**Net Revenue** = Gross Revenue - "Twilio Carrier Fees" rollup
+(You must query the gross revenue rollups AND Twilio Carrier Fees, then subtract)
 
-**COGS** = Sum of:
+**COGS** = Sum of these 8 rollups:
 - Hosting
 - Twilio Messaging
 - Twilio Short Codes
@@ -89,8 +92,16 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 - MAI OpenAI Costs
 
 **Gross Profit** = Net Revenue - COGS
+(This is a calculation, not a rollup query)
 
 **Gross Margin** = Gross Profit / Net Revenue (target: 70-80%)
+
+**HOW TO CALCULATE:** Query the income statement for the period, then use rollup_totals to sum the right categories. Example for Q4 2025:
+1. Query: { Type: "actuals", Year: "2025", Quarter: "Q4", Statement: "income_statement" }
+2. From rollup_totals, sum: Messaging Revenue + Platform Revenue + Short Code Revenue + PS Plus Revenue + SMS Sales Revenue + Fondue Revenue + Postscript AI Revenue = Gross Revenue
+3. Net Revenue = Gross Revenue - Twilio Carrier Fees (from rollup_totals)
+4. Sum COGS rollups from rollup_totals
+5. Gross Profit = Net Revenue - COGS
 
 **OpEx** = Sum of:
 - Indirect Labor
