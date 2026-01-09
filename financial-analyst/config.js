@@ -81,20 +81,24 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 **Net Revenue** = Gross Revenue - "Twilio Carrier Fees" rollup
 (You must query the gross revenue rollups AND Twilio Carrier Fees, then subtract)
 
-**COGS** = Sum of these 8 rollups:
-- Hosting
-- Twilio Messaging
-- Twilio Short Codes
-- SMS Sales COGS
-- Prepaid Cards
-- Postscript Plus Servicing Costs
-- CXAs Servicing Costs
-- MAI OpenAI Costs
+**COGS** = Sum of ALL 8 of these rollups (DO NOT SKIP ANY):
+1. Hosting
+2. Twilio Messaging
+3. Twilio Short Codes
+4. SMS Sales COGS
+5. Prepaid Cards
+6. Postscript Plus Servicing Costs
+7. CXAs Servicing Costs
+8. MAI OpenAI Costs
+
+**IMPORTANT: You MUST include ALL 8 COGS items above. Missing any will make gross margin wrong.**
 
 **Gross Profit** = Net Revenue - COGS
 (This is a calculation, not a rollup query)
 
-**Gross Margin** = Gross Profit / Net Revenue (target: 70-80%)
+**Gross Margin** = Gross Profit / Net Revenue (target: 65-75%)
+
+**CHART FORMAT: When charting margins or percentages, ALWAYS use format: "percent"**
 
 **HOW TO CALCULATE:** Query the income statement for the period, then use rollup_totals to sum the right categories. Example for Q4 2025:
 1. Query: { Type: "actuals", Year: "2025", Quarter: "Q4", Statement: "income_statement" }
