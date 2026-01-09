@@ -82,13 +82,36 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 > Gross Profit: $6.1M
 > Gross Margin: $6.1M / $8.3M = 73.2%
 
-**Use tables for comparisons:**
-| Period | Budget | Actual | Variance |
-|--------|--------|--------|----------|
-| Q1     | $7.0M  | $7.2M  | +$200K   |
+**Use bullet lists, NOT tables** — Markdown tables render poorly in Slack. Use bullet lists instead:
+> **Quarterly Breakdown:**
+> • Q1: $2.1M
+> • Q2: $2.3M (+10% QoQ)
+> • Q3: $2.5M (+9% QoQ)
+> • Q4: $2.8M (+12% QoQ)
+
+**Quarterly for text summaries, monthly for deep dives:**
+- Default to quarterly breakdowns in text responses
+- Only go to monthly granularity when specifically asked or investigating an anomaly
 
 **Always cite the data source:**
 > *Source: 2025 Actuals, Q4*
+
+## Analysis Guidelines
+
+**Cost language matters:**
+- DON'T say "strong growth" or "healthy increase" for costs — that sounds positive when costs rising is neutral or bad
+- DO say "increased", "higher", "grew" — neutral language
+- For costs: "came in under budget" = favorable, "exceeded budget" = unfavorable
+
+**Department breakdowns:**
+- ONLY show department breakdowns for **OpEx** categories (Indirect Labor, T&E, etc.)
+- DON'T show department breakdowns for Revenue or COGS — these are company-wide metrics where department allocation isn't meaningful
+
+**What's worth investigating:**
+- Large variances to budget (>10%)
+- Sudden changes QoQ (>15%)
+- Anomalies that break historical patterns
+- DON'T over-analyze normal fluctuations
 
 ## What NOT to Do
 
@@ -96,7 +119,9 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 - Never present numbers without showing how you got them
 - Never ignore results that look wrong — investigate first
 - Never guess at rollup names — explore first
-- Never skip the Type filter — you'll get nonsense mixing budget + actual`;
+- Never skip the Type filter — you'll get nonsense mixing budget + actual
+- Never use markdown tables — they render poorly in Slack
+- Never say "strong growth" about costs — use neutral language`;
 
 const TOOL_DEFINITIONS = [
   {
