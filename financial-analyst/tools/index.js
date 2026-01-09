@@ -1,7 +1,6 @@
 // Tool Registry and Executor
 
 const googleSheets = require('./google-sheets');
-const { getRilletMCPClient } = require('./rillet-mcp');
 const workflows = require('../workflows');
 
 // Rillet API base URL
@@ -172,7 +171,7 @@ const toolImplementations = {
     return workflows.accountBalance({ codes: account_codes });
   },
 
-  // Direct Rillet API via MCP execute-request
+  // Direct Rillet API call
   'call_rillet_api': async (input) => {
     const { method = 'GET', endpoint, params = {}, body } = input;
 
@@ -183,6 +182,11 @@ const toolImplementations = {
       };
     }
 
+    const apiKey = process.env.RILLET_API_KEY;
+    if (!apiKey) {
+      return { error: 'RILLET_API_KEY not configured', is_error: true };
+    }
+
     // Build the full URL with query params
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = new URL(`${RILLET_API_BASE}${cleanEndpoint}`);
@@ -190,32 +194,42 @@ const toolImplementations = {
     // Add query parameters
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        url.searchParams.append(key, value);
+        url.searchParams.append(key, String(value));
       }
     });
 
-    // Build HAR request with auth header
-    const harRequest = {
-      method: method.toUpperCase(),
-      url: url.toString(),
-      headers: [
-        { name: 'Authorization', value: `Bearer ${process.env.RILLET_API_KEY}` },
-        { name: 'Content-Type', value: 'application/json' },
-        { name: 'Accept', value: 'application/json' }
-      ]
-    };
+    try {
+      const fetchOptions = {
+        method: method.toUpperCase(),
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      };
 
-    // Add body for POST/PUT/PATCH requests
-    if (body && ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase())) {
-      harRequest.postData = {
-        mimeType: 'application/json',
-        text: JSON.stringify(body)
+      // Add body for POST/PUT/PATCH requests
+      if (body && ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase())) {
+        fetchOptions.body = JSON.stringify(body);
+      }
+
+      const response = await fetch(url.toString(), fetchOptions);
+
+      if (!response.ok) {
+        return {
+          error: `Rillet API error: ${response.status} ${response.statusText}`,
+          is_error: true
+        };
+      }
+
+      const data = await response.json();
+      return { source: 'Rillet API', endpoint, data };
+    } catch (error) {
+      return {
+        error: `Rillet API request failed: ${error.message}`,
+        is_error: true
       };
     }
-
-    // Use MCP's execute-request to make the actual API call
-    const mcpClient = getRilletMCPClient();
-    return mcpClient.callTool('execute-request', { harRequest });
   }
 };
 
