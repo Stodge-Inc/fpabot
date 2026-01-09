@@ -55,7 +55,7 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 
 ## Common Rollup Values
 
-**Gross Revenue:** Messaging Revenue, Platform Revenue, Short Code Revenue, PS Plus Revenue, SMS Sales Revenue, Fondue Revenue, Postscript AI Revenue
+**Gross Revenue:** Fondue Revenue, Marketing AI Revenue, Messaging Revenue, Platform Revenue, PS Plus Revenue, Shopper Revenue, Short Code Revenue, SMS Sales Revenue (8 rollups; actuals may also have Other Revenue)
 
 **Carrier Pass-through (subtract from Gross to get Net):** Twilio Carrier Fees
 
@@ -69,14 +69,17 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 
 **IMPORTANT: "Net Revenue", "Gross Profit", "EBITDA" are NOT rollups in the data. You must CALCULATE them by summing the component rollups below.**
 
-**Gross Revenue** = Sum of these 7 rollups:
-- Messaging Revenue
-- Platform Revenue
-- Short Code Revenue
-- PS Plus Revenue
-- SMS Sales Revenue
-- Fondue Revenue
-- Postscript AI Revenue
+**Gross Revenue** = Sum of these 8 rollups (for 2026 Budget):
+1. Fondue Revenue
+2. Marketing AI Revenue
+3. Messaging Revenue
+4. Platform Revenue
+5. PS Plus Revenue
+6. Shopper Revenue
+7. Short Code Revenue
+8. SMS Sales Revenue
+
+NOTE: Actuals may use slightly different rollup names (e.g., "Other Revenue", "Postscript AI Revenue" vs "Marketing AI Revenue"). Use explore_financial_data to verify exact names.
 
 **Net Revenue** = Gross Revenue - "Twilio Carrier Fees" rollup
 (You must query the gross revenue rollups AND Twilio Carrier Fees, then subtract)
@@ -110,9 +113,9 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 
 **HOW TO CALCULATE:** Query the income statement for the period, then use rollup_totals to sum the right categories. Example for Q4 2025:
 1. Query: { Type: "actuals", Year: "2025", Quarter: "Q4", Statement: "income_statement" }
-2. From rollup_totals, sum: Messaging Revenue + Platform Revenue + Short Code Revenue + PS Plus Revenue + SMS Sales Revenue + Fondue Revenue + Postscript AI Revenue = Gross Revenue
+2. From rollup_totals, sum ALL revenue rollups (check exact names with explore first) = Gross Revenue
 3. Net Revenue = Gross Revenue - Twilio Carrier Fees (from rollup_totals)
-4. Sum COGS rollups from rollup_totals
+4. Sum ALL 8 COGS rollups from rollup_totals
 5. Gross Profit = Net Revenue - COGS
 
 **OpEx** = Sum of:

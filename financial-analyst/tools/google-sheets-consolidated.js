@@ -330,11 +330,14 @@ class GoogleSheetsClient {
     const tabs = await this.getTabList();
     const allData = [];
 
+    console.log(`[Sheets] Found ${tabs.length} tabs, checking for configured tabs...`);
+
     for (const tabName of tabs) {
       const config = this.getTabConfig(tabName);
       if (config) {
         try {
           const tabData = await this.loadTab(tabName);
+          console.log(`[Sheets] Loaded ${tabName}: ${tabData.length} rows, type=${config.type}`);
           allData.push(...tabData);
         } catch (err) {
           console.error(`[Sheets] Error loading ${tabName}:`, err.message);
@@ -342,6 +345,7 @@ class GoogleSheetsClient {
       }
     }
 
+    console.log(`[Sheets] Total loaded: ${allData.length} rows from all tabs`);
     return allData;
   }
 
@@ -492,6 +496,16 @@ class GoogleSheetsClient {
     }
 
     const totalAmount = filtered.reduce((sum, r) => sum + (r.value || 0), 0);
+
+    // Debug: show breakdown by source tab
+    const byTab = {};
+    for (const row of filtered) {
+      const tab = row._tab || 'unknown';
+      if (!byTab[tab]) byTab[tab] = { count: 0, total: 0 };
+      byTab[tab].count++;
+      byTab[tab].total += row.value || 0;
+    }
+    console.log('[Sheets] Query results by source tab:', JSON.stringify(byTab));
 
     return {
       filters_applied: filters,
