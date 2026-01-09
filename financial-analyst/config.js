@@ -55,21 +55,74 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 
 ## Common Rollup Values
 
-**Revenue:** Messaging Revenue, Platform Revenue, Short Code Revenue, PS Plus Revenue, Shopper Revenue, SMS Sales Revenue, Fondue Revenue, Marketing AI Revenue
+**Gross Revenue:** Messaging Revenue, Platform Revenue, Short Code Revenue, PS Plus Revenue, SMS Sales Revenue, Fondue Revenue, Postscript AI Revenue
 
-**COGS:** Twilio Messaging, Twilio Short Codes, Hosting, Prepaid Cards, MAI OpenAI Costs, SMS Sales COGS, Postscript Plus Servicing Costs, CXAs Servicing Costs
+**Carrier Pass-through (subtract from Gross to get Net):** Twilio Carrier Fees
 
-**OpEx:** Indirect Labor, T&E, Tech & IT, Professional Fees, Marketing Expense, Payment Processing, Other OpEx, Recruiting Expense, Bad Debt
+**COGS:** Hosting, Twilio Messaging, Twilio Short Codes, SMS Sales COGS, Prepaid Cards, Postscript Plus Servicing Costs, CXAs Servicing Costs, MAI OpenAI Costs
 
-## Key Metrics to Calculate
+**OpEx:** Indirect Labor, T&E, Tech & IT, Professional Fees, Marketing Expense, Payment Processing, Other OpEx, Recruiting Expense, Bad Debt, Severance, Bank Fees, Twilio OPEX, Contra Payroll
 
-| Metric | Formula | Target |
-|--------|---------|--------|
-| Gross Revenue | Sum all Revenue rollups | - |
-| Net Revenue | Gross Revenue - Twilio Carrier Fees | - |
-| Gross Margin | (Net Revenue - COGS) / Net Revenue | 70-80% |
-| EBITDA | Gross Profit - OpEx | - |
-| EBITDA Margin | EBITDA / Net Revenue | 10-20% |
+**Other Income/Expense:** Other Income, Taxes, Depreciation and Amortization, Stock Comp Expense, Interest Expense, Other Expenses, Other Expense, Capitalized Software, Depreciation Expense
+
+## Key Metrics — EXACT FORMULAS (use these rollup names precisely)
+
+**Gross Revenue** = Sum of:
+- Messaging Revenue
+- Platform Revenue
+- Short Code Revenue
+- PS Plus Revenue
+- SMS Sales Revenue
+- Fondue Revenue
+- Postscript AI Revenue
+
+**Net Revenue** = Gross Revenue - Twilio Carrier Fees
+
+**COGS** = Sum of:
+- Hosting
+- Twilio Messaging
+- Twilio Short Codes
+- SMS Sales COGS
+- Prepaid Cards
+- Postscript Plus Servicing Costs
+- CXAs Servicing Costs
+- MAI OpenAI Costs
+
+**Gross Profit** = Net Revenue - COGS
+
+**Gross Margin** = Gross Profit / Net Revenue (target: 70-80%)
+
+**OpEx** = Sum of:
+- Indirect Labor
+- T&E
+- Tech & IT
+- Professional Fees
+- Marketing Expense
+- Payment Processing
+- Other OpEx
+- Recruiting Expense
+- Bad Debt
+- Severance
+- Bank Fees
+- Twilio OPEX
+- Contra Payroll
+
+**EBITDA** = Gross Profit - OpEx
+
+**EBITDA Margin** = EBITDA / Net Revenue (target: 10-20%)
+
+**Other Income/Expense** = Sum of:
+- Other Income
+- Taxes
+- Depreciation and Amortization
+- Stock Comp Expense
+- Interest Expense
+- Other Expenses
+- Other Expense
+- Capitalized Software
+- Depreciation Expense
+
+**Net Income** = EBITDA - Other Income/Expense
 
 ## Response Format
 
