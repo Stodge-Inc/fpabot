@@ -4,59 +4,10 @@ const ClaudeClient = require('./claude-client');
 const tools = require('./tools');
 const { formatResponse, formatError } = require('./formatters/slack-blocks');
 const { SYSTEM_PROMPT, TOOL_DEFINITIONS } = require('./config');
+const conversationStore = require('./conversation-store');
 
 // Maximum iterations to prevent infinite tool loops
 const MAX_TOOL_ITERATIONS = 10;
-
-// In-memory conversation store by thread
-// Key: threadTs, Value: { messages: [], lastActivity: Date }
-const conversationStore = new Map();
-
-// Clean up old conversations (older than 1 hour)
-const CONVERSATION_TTL_MS = 60 * 60 * 1000;
-
-function cleanupOldConversations() {
-  const now = Date.now();
-  for (const [threadTs, conv] of conversationStore.entries()) {
-    if (now - conv.lastActivity > CONVERSATION_TTL_MS) {
-      conversationStore.delete(threadTs);
-    }
-  }
-}
-
-// Run cleanup every 10 minutes
-setInterval(cleanupOldConversations, 10 * 60 * 1000);
-
-/**
- * Get or create conversation history for a thread
- * @param {string} threadTs - Thread timestamp
- * @returns {Array} - Message history
- */
-function getConversation(threadTs) {
-  if (!threadTs) return [];
-
-  const conv = conversationStore.get(threadTs);
-  return conv ? conv.messages : [];
-}
-
-/**
- * Save conversation history for a thread
- * @param {string} threadTs - Thread timestamp
- * @param {Array} messages - Full message history
- */
-function saveConversation(threadTs, messages) {
-  if (!threadTs) return;
-
-  // Only keep the last few exchanges to manage context size
-  // Each exchange = user message + assistant response
-  const maxMessages = 20; // ~10 exchanges
-  const trimmedMessages = messages.slice(-maxMessages);
-
-  conversationStore.set(threadTs, {
-    messages: trimmedMessages,
-    lastActivity: Date.now()
-  });
-}
 
 /**
  * Analyze a financial question using Claude with tool use
@@ -69,7 +20,7 @@ async function analyze(question, context = {}) {
   const { threadTs } = context;
 
   // Get existing conversation history for this thread
-  const existingMessages = getConversation(threadTs);
+  const existingMessages = await conversationStore.get(threadTs);
   console.log(`[FPA Bot] Thread ${threadTs}: Found ${existingMessages.length} existing messages in conversation`);
 
   // Build messages - start with history, add new question
@@ -167,7 +118,7 @@ async function analyze(question, context = {}) {
           { role: 'user', content: question },
           { role: 'assistant', content: textContent + contextNote }
         ];
-        saveConversation(threadTs, conversationToSave);
+        await conversationStore.save(threadTs, conversationToSave);
 
         // Format for Slack
         return formatResponse(textContent);
@@ -222,9 +173,9 @@ function checkConfiguration() {
  * Clear conversation history for a thread
  * @param {string} threadTs - Thread timestamp
  */
-function clearConversation(threadTs) {
+async function clearConversation(threadTs) {
   if (threadTs) {
-    conversationStore.delete(threadTs);
+    await conversationStore.delete(threadTs);
   }
 }
 
