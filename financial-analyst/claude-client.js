@@ -5,7 +5,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 class ClaudeClient {
   constructor() {
     this.client = null;
-    this.model = process.env.CLAUDE_MODEL || 'claude-3-haiku-20240307'; // Haiku 3 - 50K tokens/min limit
+    this.model = process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514'; // Sonnet for better reasoning
   }
 
   initialize() {

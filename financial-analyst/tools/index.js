@@ -1,75 +1,103 @@
-// Tool Registry and Executor - Google Sheets Only
+// Tool Registry and Executor - Google Sheets with Aleph format
 
-const googleSheets = require('./google-sheets');
+const sheetsClient = require('./google-sheets-consolidated');
 
 // Map tool names to their implementations
 const toolImplementations = {
-  // Get context/instructions for understanding the data
-  'get_budget_context': async () => {
-    const context = await googleSheets.getBudgetContext();
-    if (!context) {
+  // Explore what's in the data
+  'explore_financial_data': async (input) => {
+    const { dimension, filter } = input;
+
+    if (!dimension) {
       return {
-        error: 'Could not read budget context tab. Make sure "Context for Claude" tab exists.',
+        error: 'dimension is required. Valid options: Type, Statement, Rollup, Account, Department, Vendor, Month, Quarter, Year, Product, Metric Name, Metric Type',
         is_error: true
       };
     }
-    return {
-      source: 'Google Sheets - Budget Context',
-      context: context,
-      hint: 'This explains the budget data structure. Use get_budget_data or get_actuals_data to query actual numbers.'
-    };
+
+    try {
+      const result = await sheetsClient.explore(dimension, filter || {});
+      return {
+        source: 'Google Sheets - Budget & Actuals',
+        ...result
+      };
+    } catch (error) {
+      return {
+        error: `Failed to explore data: ${error.message}`,
+        is_error: true
+      };
+    }
   },
 
-  // Query budget data
-  'get_budget_data': async (input) => googleSheets.getBudgetData(input),
+  // Query financial data with filters
+  'query_financial_data': async (input) => {
+    const { Type, Statement, Rollup, Account, Department, Vendor, Month, Quarter, Year, Product, MetricName, MetricType } = input;
 
-  // Query actuals data (same format as budget)
-  'get_actuals_data': async (input) => googleSheets.getActualsData(input),
+    // Build filters object
+    const filters = {};
+    if (Type) filters.Type = Type;
+    if (Statement) filters.Statement = Statement;
+    if (Rollup) filters.Rollup = Rollup;
+    if (Account) filters.Account = Account;
+    if (Department) filters.Department = Department;
+    if (Vendor) filters.Vendor = Vendor;
+    if (Month) filters.Month = Month;
+    if (Quarter) filters.Quarter = Quarter;
+    if (Year) filters.Year = Year;
+    if (Product) filters.Product = Product;
+    if (MetricName) filters.MetricName = MetricName;
+    if (MetricType) filters.MetricType = MetricType;
 
-  // List available sheets and tabs
-  'list_available_sheets': async (input) => googleSheets.listAvailableSheets(input),
+    // Warn if Type is not specified
+    if (!Type) {
+      console.warn('[Tools] query_financial_data called without Type filter - results will mix Budget and Actual');
+    }
+
+    try {
+      const result = await sheetsClient.query(filters);
+      return {
+        source: 'Google Sheets - Budget & Actuals',
+        warning: !Type ? 'No Type filter specified - results include both Budget and Actual data' : undefined,
+        ...result
+      };
+    } catch (error) {
+      return {
+        error: `Failed to query data: ${error.message}`,
+        is_error: true
+      };
+    }
+  },
 
   // Compare budget vs actuals
-  'compare_budget_vs_actuals': async (input) => {
-    const { metric, month, quarter, year, department } = input;
+  'variance_analysis': async (input) => {
+    const { Rollup, Statement, Department, Quarter, Year, Month } = input;
 
-    // Get budget data
-    const budgetResult = await googleSheets.getBudgetData({ metric, month, quarter, year, department });
-
-    // Get actuals data
-    const actualsResult = await googleSheets.getActualsData({ metric, month, quarter, year, department });
-
-    if (budgetResult.is_error) {
-      return { error: `Budget query failed: ${budgetResult.error}`, is_error: true };
-    }
-    if (actualsResult.is_error) {
-      return { error: `Actuals query failed: ${actualsResult.error}`, is_error: true };
+    if (!Year) {
+      return {
+        error: 'Year is required for variance analysis',
+        is_error: true
+      };
     }
 
-    const budgetTotal = budgetResult.total_amount || 0;
-    const actualsTotal = actualsResult.total_amount || 0;
-    const variance = actualsTotal - budgetTotal;
-    const variancePercent = budgetTotal !== 0 ? ((variance / Math.abs(budgetTotal)) * 100).toFixed(1) : 'N/A';
-
-    return {
-      source: 'Google Sheets - Budget vs Actuals',
-      query: { metric, month, quarter, year, department },
-      budget: {
-        total: budgetTotal,
-        row_count: budgetResult.row_count,
-        metric_totals: budgetResult.metric_totals
-      },
-      actuals: {
-        total: actualsTotal,
-        row_count: actualsResult.row_count,
-        metric_totals: actualsResult.metric_totals
-      },
-      variance: {
-        amount: variance,
-        percent: variancePercent,
-        favorable: variance > 0 ? 'Over budget' : variance < 0 ? 'Under budget' : 'On budget'
-      }
-    };
+    try {
+      const result = await sheetsClient.varianceAnalysis({
+        Rollup,
+        Statement,
+        Department,
+        Quarter,
+        Year,
+        Month
+      });
+      return {
+        source: 'Google Sheets - Variance Analysis',
+        ...result
+      };
+    } catch (error) {
+      return {
+        error: `Failed to perform variance analysis: ${error.message}`,
+        is_error: true
+      };
+    }
   }
 };
 
@@ -88,12 +116,12 @@ async function execute(name, input) {
   }
 
   try {
-    console.log(`Executing tool: ${name}`, JSON.stringify(input));
+    console.log(`[Tools] Executing: ${name}`, JSON.stringify(input));
     const result = await tool(input);
-    console.log(`Tool ${name} completed:`, result.is_error ? result.error : 'success');
+    console.log(`[Tools] ${name} completed:`, result.is_error ? result.error : 'success');
     return result;
   } catch (error) {
-    console.error(`Tool ${name} error:`, error);
+    console.error(`[Tools] ${name} error:`, error);
     return {
       error: `Tool execution failed: ${error.message}`,
       is_error: true,
