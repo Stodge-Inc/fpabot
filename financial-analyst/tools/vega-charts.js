@@ -51,19 +51,21 @@ function formatCurrency(value) {
 }
 
 /**
- * Create a bar chart spec
+ * Create a bar chart spec with data labels
  */
 function barChartSpec({ title, labels, values }) {
+  // Pre-format the labels for display
   const data = labels.map((label, i) => ({
     category: label,
-    value: values[i]
+    value: values[i],
+    label: formatCurrency(values[i])
   }));
 
   return {
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
     width: 600,
     height: 300,
-    padding: { top: 20, bottom: 20, left: 20, right: 20 },
+    padding: { top: 30, bottom: 20, left: 20, right: 20 },
     background: 'white',
     title: {
       text: title,
@@ -73,45 +75,63 @@ function barChartSpec({ title, labels, values }) {
       color: '#1F2937'
     },
     data: { values: data },
-    mark: {
-      type: 'bar',
-      cornerRadiusTopLeft: 4,
-      cornerRadiusTopRight: 4,
-      color: COLORS.purple
-    },
-    encoding: {
-      x: {
-        field: 'category',
-        type: 'nominal',
-        axis: {
-          title: null,
-          labelFont: 'system-ui, -apple-system, sans-serif',
-          labelFontSize: 11,
-          labelColor: '#6B7280',
-          tickColor: '#E5E7EB',
-          domainColor: '#E5E7EB'
+    layer: [
+      {
+        mark: {
+          type: 'bar',
+          cornerRadiusTopLeft: 4,
+          cornerRadiusTopRight: 4,
+          color: COLORS.purple
+        },
+        encoding: {
+          x: {
+            field: 'category',
+            type: 'nominal',
+            axis: {
+              title: null,
+              labelFont: 'system-ui, -apple-system, sans-serif',
+              labelFontSize: 11,
+              labelColor: '#6B7280',
+              tickColor: '#E5E7EB',
+              domainColor: '#E5E7EB'
+            }
+          },
+          y: {
+            field: 'value',
+            type: 'quantitative',
+            axis: {
+              title: null,
+              labelFont: 'system-ui, -apple-system, sans-serif',
+              labelFontSize: 11,
+              labelColor: '#6B7280',
+              gridColor: '#E5E7EB',
+              tickColor: '#E5E7EB',
+              domainColor: '#E5E7EB',
+              labelExpr: "datum.value >= 1000000 ? '$' + datum.value/1000000 + 'M' : datum.value >= 1000 ? '$' + datum.value/1000 + 'K' : '$' + datum.value"
+            }
+          },
+          tooltip: [
+            { field: 'category', type: 'nominal', title: 'Period' },
+            { field: 'value', type: 'quantitative', title: 'Amount', format: '$,.0f' }
+          ]
         }
       },
-      y: {
-        field: 'value',
-        type: 'quantitative',
-        axis: {
-          title: null,
-          labelFont: 'system-ui, -apple-system, sans-serif',
-          labelFontSize: 11,
-          labelColor: '#6B7280',
-          gridColor: '#E5E7EB',
-          tickColor: '#E5E7EB',
-          domainColor: '#E5E7EB',
-          format: '$,.0f',
-          labelExpr: "datum.value >= 1000000 ? '$' + datum.value/1000000 + 'M' : datum.value >= 1000 ? '$' + datum.value/1000 + 'K' : '$' + datum.value"
+      {
+        mark: {
+          type: 'text',
+          dy: -8,
+          fontSize: 10,
+          fontWeight: 500,
+          font: 'system-ui, -apple-system, sans-serif',
+          color: '#374151'
+        },
+        encoding: {
+          x: { field: 'category', type: 'nominal' },
+          y: { field: 'value', type: 'quantitative' },
+          text: { field: 'label', type: 'nominal' }
         }
-      },
-      tooltip: [
-        { field: 'category', type: 'nominal', title: 'Period' },
-        { field: 'value', type: 'quantitative', title: 'Amount', format: '$,.0f' }
-      ]
-    },
+      }
+    ],
     config: {
       view: { stroke: null }
     }
@@ -204,20 +224,20 @@ function lineChartSpec({ title, labels, values }) {
 }
 
 /**
- * Create a comparison (budget vs actual) bar chart spec
+ * Create a comparison (budget vs actual) bar chart spec with data labels
  */
 function comparisonChartSpec({ title, labels, budgetValues, actualValues }) {
   const data = [];
   labels.forEach((label, i) => {
-    data.push({ category: label, type: 'Budget', value: budgetValues[i] });
-    data.push({ category: label, type: 'Actual', value: actualValues[i] });
+    data.push({ category: label, type: 'Budget', value: budgetValues[i], label: formatCurrency(budgetValues[i]) });
+    data.push({ category: label, type: 'Actual', value: actualValues[i], label: formatCurrency(actualValues[i]) });
   });
 
   return {
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
     width: 600,
     height: 300,
-    padding: { top: 20, bottom: 20, left: 20, right: 20 },
+    padding: { top: 30, bottom: 20, left: 20, right: 20 },
     background: 'white',
     title: {
       text: title,
@@ -227,61 +247,81 @@ function comparisonChartSpec({ title, labels, budgetValues, actualValues }) {
       color: '#1F2937'
     },
     data: { values: data },
-    mark: {
-      type: 'bar',
-      cornerRadiusTopLeft: 4,
-      cornerRadiusTopRight: 4
-    },
-    encoding: {
-      x: {
-        field: 'category',
-        type: 'nominal',
-        axis: {
-          title: null,
-          labelFont: 'system-ui, -apple-system, sans-serif',
-          labelFontSize: 11,
-          labelColor: '#6B7280',
-          tickColor: '#E5E7EB',
-          domainColor: '#E5E7EB'
-        }
-      },
-      xOffset: { field: 'type' },
-      y: {
-        field: 'value',
-        type: 'quantitative',
-        axis: {
-          title: null,
-          labelFont: 'system-ui, -apple-system, sans-serif',
-          labelFontSize: 11,
-          labelColor: '#6B7280',
-          gridColor: '#E5E7EB',
-          tickColor: '#E5E7EB',
-          domainColor: '#E5E7EB',
-          labelExpr: "datum.value >= 1000000 ? '$' + datum.value/1000000 + 'M' : datum.value >= 1000 ? '$' + datum.value/1000 + 'K' : '$' + datum.value"
-        }
-      },
-      color: {
-        field: 'type',
-        type: 'nominal',
-        scale: {
-          domain: ['Budget', 'Actual'],
-          range: [COLORS.teal, COLORS.purple]
+    layer: [
+      {
+        mark: {
+          type: 'bar',
+          cornerRadiusTopLeft: 4,
+          cornerRadiusTopRight: 4
         },
-        legend: {
-          title: null,
-          orient: 'top-right',
-          labelFont: 'system-ui, -apple-system, sans-serif',
-          labelFontSize: 11,
-          symbolType: 'square',
-          symbolSize: 100
+        encoding: {
+          x: {
+            field: 'category',
+            type: 'nominal',
+            axis: {
+              title: null,
+              labelFont: 'system-ui, -apple-system, sans-serif',
+              labelFontSize: 11,
+              labelColor: '#6B7280',
+              tickColor: '#E5E7EB',
+              domainColor: '#E5E7EB'
+            }
+          },
+          xOffset: { field: 'type' },
+          y: {
+            field: 'value',
+            type: 'quantitative',
+            axis: {
+              title: null,
+              labelFont: 'system-ui, -apple-system, sans-serif',
+              labelFontSize: 11,
+              labelColor: '#6B7280',
+              gridColor: '#E5E7EB',
+              tickColor: '#E5E7EB',
+              domainColor: '#E5E7EB',
+              labelExpr: "datum.value >= 1000000 ? '$' + datum.value/1000000 + 'M' : datum.value >= 1000 ? '$' + datum.value/1000 + 'K' : '$' + datum.value"
+            }
+          },
+          color: {
+            field: 'type',
+            type: 'nominal',
+            scale: {
+              domain: ['Budget', 'Actual'],
+              range: [COLORS.teal, COLORS.purple]
+            },
+            legend: {
+              title: null,
+              orient: 'top-right',
+              labelFont: 'system-ui, -apple-system, sans-serif',
+              labelFontSize: 11,
+              symbolType: 'square',
+              symbolSize: 100
+            }
+          },
+          tooltip: [
+            { field: 'category', type: 'nominal', title: 'Period' },
+            { field: 'type', type: 'nominal', title: 'Type' },
+            { field: 'value', type: 'quantitative', title: 'Amount', format: '$,.0f' }
+          ]
         }
       },
-      tooltip: [
-        { field: 'category', type: 'nominal', title: 'Period' },
-        { field: 'type', type: 'nominal', title: 'Type' },
-        { field: 'value', type: 'quantitative', title: 'Amount', format: '$,.0f' }
-      ]
-    },
+      {
+        mark: {
+          type: 'text',
+          dy: -8,
+          fontSize: 9,
+          fontWeight: 500,
+          font: 'system-ui, -apple-system, sans-serif',
+          color: '#374151'
+        },
+        encoding: {
+          x: { field: 'category', type: 'nominal' },
+          xOffset: { field: 'type' },
+          y: { field: 'value', type: 'quantitative' },
+          text: { field: 'label', type: 'nominal' }
+        }
+      }
+    ],
     config: {
       view: { stroke: null }
     }

@@ -9,8 +9,8 @@ function formatResponse(text) {
   const blocks = [];
 
   // Extract chart URLs and convert markdown images to just URLs
-  // Matches both ![alt](url) and bare quickchart.io URLs
-  text = text.replace(/!\[[^\]]*\]\((https:\/\/quickchart\.io\/chart[^)]+)\)/g, '\n$1\n');
+  // Matches ![alt](url) for any chart URL
+  text = text.replace(/!\[[^\]]*\]\((https:\/\/[^)]+\/chart\/[^)]+)\)/g, '\n$1\n');
 
   // Split text into sections by double newlines
   const sections = text.split(/\n\n+/);
@@ -19,8 +19,10 @@ function formatResponse(text) {
     const trimmed = section.trim();
     if (!trimmed) continue;
 
-    // Check if it's a QuickChart URL - convert to image block
-    if (trimmed.startsWith('https://quickchart.io/chart')) {
+    // Check if it's a chart URL (QuickChart or our hosted charts) - convert to image block
+    const isChartUrl = trimmed.startsWith('https://quickchart.io/chart') ||
+                       trimmed.match(/^https:\/\/[^\/]+\/chart\/[a-f0-9-]+\.png$/i);
+    if (isChartUrl) {
       blocks.push({
         type: 'image',
         image_url: trimmed,
