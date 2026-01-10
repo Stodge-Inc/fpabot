@@ -15,6 +15,8 @@ class ClaudeClient {
       throw new Error('ANTHROPIC_API_KEY environment variable is not set');
     }
 
+    console.log(`[Claude] Initializing with model: ${this.model}`);
+
     this.client = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY
     });

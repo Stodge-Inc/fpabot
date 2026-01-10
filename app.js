@@ -229,13 +229,16 @@ app.message(async ({ message, client, logger }) => {
     const botUserId = botInfo.user_id;
     const messageAtMentionsUs = message.text?.includes(`<@${botUserId}>`);
 
+    // If @mentioned, let app_mention handler deal with it (avoid double-processing)
+    if (messageAtMentionsUs) return;
+
     // Check if we have an existing conversation in this thread
     const existingConversation = await conversationStore.get(message.thread_ts);
     const hasExistingConversation = existingConversation && existingConversation.length > 0;
 
-    // Respond if: (1) user @mentions us, OR (2) we already have a conversation in this thread
-    // This allows follow-up questions without re-mentioning, but prevents "chasing" into new threads
-    if (!messageAtMentionsUs && !hasExistingConversation) return;
+    // Only respond to follow-ups in threads where we already have a conversation
+    // This prevents "chasing" into threads where we weren't invited
+    if (!hasExistingConversation) return;
 
     // Extract the question (remove the @mention)
     const question = message.text.replace(/<@[A-Z0-9]+>/g, '').trim();
