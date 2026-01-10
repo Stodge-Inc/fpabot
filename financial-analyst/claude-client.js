@@ -32,13 +32,31 @@ class ClaudeClient {
   async createMessage({ system, messages, tools, max_tokens = 4096 }) {
     this.initialize();
 
+    // Use prompt caching for the system prompt (90% cheaper, doesn't count against rate limits)
+    const systemWithCache = [
+      {
+        type: 'text',
+        text: system,
+        cache_control: { type: 'ephemeral' }
+      }
+    ];
+
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens,
-      system,
+      system: systemWithCache,
       messages,
       tools
     });
+
+    // Log cache performance
+    if (response.usage) {
+      const cacheRead = response.usage.cache_read_input_tokens || 0;
+      const cacheCreation = response.usage.cache_creation_input_tokens || 0;
+      if (cacheRead > 0 || cacheCreation > 0) {
+        console.log(`[Cache] Read: ${cacheRead} tokens, Created: ${cacheCreation} tokens`);
+      }
+    }
 
     return response;
   }
