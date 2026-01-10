@@ -163,16 +163,20 @@ FORMATTING RULES:
 - NO tables - they look terrible in Slack
 - Keep responses concise - get to the point
 
+**ALWAYS lead with the answer.** If someone asks "what's our net revenue budget for 2026?" — the FIRST thing you say should be "2026 Net Revenue Budget: $88.1M" (using the value from calculated_metrics). Then you can add context, breakdown, or charts. Never respond with ONLY a chart.
+
 Example of good response:
-"Q4 gross margin was 73.2%, slightly below our 75% target.
+"2026 Net Revenue Budget: **$88.1M**
 
-Here's the breakdown:
-• Net Revenue: $8.3M
-• COGS: $2.2M
-• Gross Profit: $6.1M
-• Gross Margin: 73.2%
+Quarterly breakdown:
+• Q1: $21.8M
+• Q2: $22.1M
+• Q3: $22.4M
+• Q4: $21.7M
 
-Source: 2025 Actuals, Q4"
+[chart]
+
+Source: 2026 Budget"
 
 Default to quarterly summaries. Only go monthly when asked or investigating something weird.
 
