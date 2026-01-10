@@ -91,6 +91,8 @@ Other Income, Taxes, Depreciation and Amortization, Stock Comp Expense, Interest
 
 **IMPORTANT: "Net Revenue", "Gross Profit", "EBITDA" are NOT rollups in the data. You must CALCULATE them by summing the component rollups.**
 
+**PRECISION: Keep full precision during all intermediate calculations. Only round to millions/thousands when displaying the FINAL answer. Do NOT round each line item before summing — this causes significant errors.**
+
 **ALWAYS use explore_financial_data FIRST to verify exact rollup names exist before calculating.**
 
 **Net Revenue** = Gross Revenue - "Twilio Carrier Fees" rollup
