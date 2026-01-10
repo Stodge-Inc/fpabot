@@ -65,6 +65,26 @@ function formatValue(value, format = 'currency') {
   return formatCurrency(value);
 }
 
+// Month and quarter sort orders
+const MONTH_ORDER = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const QUARTER_ORDER = ['Q1', 'Q2', 'Q3', 'Q4'];
+
+/**
+ * Get sort order for labels (preserves input order)
+ */
+function getSortOrder(labels) {
+  // If labels look like months, use month order
+  if (labels.some(l => MONTH_ORDER.includes(l))) {
+    return MONTH_ORDER;
+  }
+  // If labels look like quarters, use quarter order
+  if (labels.some(l => QUARTER_ORDER.includes(l))) {
+    return QUARTER_ORDER;
+  }
+  // Otherwise preserve input order
+  return labels;
+}
+
 /**
  * Create a bar chart spec with data labels
  * @param {string} format - 'currency' (default) or 'percent'
@@ -76,6 +96,9 @@ function barChartSpec({ title, labels, values, format = 'currency' }) {
     value: values[i],
     label: formatValue(values[i], format)
   }));
+
+  // Get sort order
+  const sortOrder = getSortOrder(labels);
 
   // Y-axis label expression based on format
   const yAxisLabelExpr = format === 'percent'
@@ -108,6 +131,7 @@ function barChartSpec({ title, labels, values, format = 'currency' }) {
           x: {
             field: 'category',
             type: 'nominal',
+            sort: sortOrder,
             axis: {
               title: null,
               labelFont: 'system-ui, -apple-system, sans-serif',
@@ -147,7 +171,7 @@ function barChartSpec({ title, labels, values, format = 'currency' }) {
           color: '#374151'
         },
         encoding: {
-          x: { field: 'category', type: 'nominal' },
+          x: { field: 'category', type: 'nominal', sort: sortOrder },
           y: { field: 'value', type: 'quantitative' },
           text: { field: 'label', type: 'nominal' }
         }
@@ -169,6 +193,9 @@ function lineChartSpec({ title, labels, values, format = 'currency' }) {
     value: values[i],
     label: formatValue(values[i], format)
   }));
+
+  // Get sort order
+  const sortOrder = getSortOrder(labels);
 
   const yAxisLabelExpr = format === 'percent'
     ? "datum.value + '%'"
@@ -200,6 +227,7 @@ function lineChartSpec({ title, labels, values, format = 'currency' }) {
           x: {
             field: 'category',
             type: 'nominal',
+            sort: sortOrder,
             axis: {
               title: null,
               labelFont: 'system-ui, -apple-system, sans-serif',
@@ -235,7 +263,7 @@ function lineChartSpec({ title, labels, values, format = 'currency' }) {
           strokeWidth: 2
         },
         encoding: {
-          x: { field: 'category', type: 'nominal' },
+          x: { field: 'category', type: 'nominal', sort: sortOrder },
           y: { field: 'value', type: 'quantitative' },
           tooltip: [
             { field: 'category', type: 'nominal', title: 'Period' },
@@ -260,6 +288,9 @@ function comparisonChartSpec({ title, labels, budgetValues, actualValues, format
     data.push({ category: label, type: 'Budget', value: budgetValues[i], label: formatValue(budgetValues[i], format) });
     data.push({ category: label, type: 'Actual', value: actualValues[i], label: formatValue(actualValues[i], format) });
   });
+
+  // Get sort order
+  const sortOrder = getSortOrder(labels);
 
   const yAxisLabelExpr = format === 'percent'
     ? "datum.value + '%'"
@@ -290,6 +321,7 @@ function comparisonChartSpec({ title, labels, budgetValues, actualValues, format
           x: {
             field: 'category',
             type: 'nominal',
+            sort: sortOrder,
             axis: {
               title: null,
               labelFont: 'system-ui, -apple-system, sans-serif',
@@ -347,7 +379,7 @@ function comparisonChartSpec({ title, labels, budgetValues, actualValues, format
           color: '#374151'
         },
         encoding: {
-          x: { field: 'category', type: 'nominal' },
+          x: { field: 'category', type: 'nominal', sort: sortOrder },
           xOffset: { field: 'type' },
           y: { field: 'value', type: 'quantitative' },
           text: { field: 'label', type: 'nominal' }
