@@ -133,6 +133,23 @@ const TAB_CONFIGS = {
       // Quarter and Year derived from Month
     }
   },
+  // Combined Metrics table (type derived from date: past = actuals, future = budget)
+  'Metrics': {
+    type: 'metrics',
+    statement: 'metrics',
+    headerRow: 14,
+    columns: {
+      department: 'Department',
+      product: 'Product',
+      metricName: 'Metric Name',
+      metricType: 'Metric Type',
+      month: 'Month',
+      value: 'value',
+      quarter: 'Quarter',
+      year: 'Year'
+    }
+  },
+  // Legacy metrics tab
   '2026 Budget and pre-2026 Actuals - Metrics': {
     type: 'metrics', // Special handling - past periods are actuals, future are budget
     statement: 'metrics',
@@ -419,22 +436,28 @@ class GoogleSheetsClient {
 
     console.log(`[Sheets] Found ${tabs.length} tabs, checking for configured tabs...`);
 
-    // Check if BvA (combined) tabs exist - these are preferred over legacy separate tabs
+    // Check if combined tabs exist - these are preferred over legacy separate tabs
     const hasBvAIncomeStatement = tabs.some(t => t.includes('BvA Income Statement'));
     const hasBvABalanceSheet = tabs.some(t => t.includes('BvA Balance Sheet'));
+    // For Metrics, check if a simple "Metrics" tab exists (without the long legacy name)
+    const hasSimpleMetrics = tabs.some(t => t === 'Metrics' || t.includes('BvA Metrics'));
     const loadedStatements = new Set(); // Track which statements we've loaded
 
     for (const tabName of tabs) {
       const config = this.getTabConfig(tabName);
       if (!config) continue;
 
-      // Skip legacy tabs if BvA version exists
+      // Skip legacy tabs if combined version exists
       if (config.statement === 'income_statement' && hasBvAIncomeStatement && !tabName.includes('BvA')) {
         console.log(`[Sheets] Skipping ${tabName} (using BvA Income Statement instead)`);
         continue;
       }
       if (config.statement === 'balance_sheet' && hasBvABalanceSheet && !tabName.includes('BvA')) {
         console.log(`[Sheets] Skipping ${tabName} (using BvA Balance Sheet instead)`);
+        continue;
+      }
+      if (config.statement === 'metrics' && hasSimpleMetrics && tabName.includes('2026 Budget')) {
+        console.log(`[Sheets] Skipping ${tabName} (using Metrics tab instead)`);
         continue;
       }
 
