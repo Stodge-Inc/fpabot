@@ -53,33 +53,48 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 - **query_financial_data** — Get data with filters. Returns rollup_totals for calculations. ALWAYS specify Type.
 - **variance_analysis** — Compare budget vs actuals. Returns variances sorted by magnitude with favorable/unfavorable flags.
 
-## Common Rollup Values
+## Rollup Names (Auto-Normalized)
 
-**Gross Revenue:** Fondue Revenue, Marketing AI Revenue, Messaging Revenue, Platform Revenue, PS Plus Revenue, Shopper Revenue, Short Code Revenue, SMS Sales Revenue (8 rollups; actuals may also have Other Revenue)
+**The system automatically normalizes rollup names** so you can use the same canonical names regardless of whether you're querying 2025 Budget, 2026 Budget, or Actuals. The following normalizations happen automatically:
+- "Marketing AI Revenue" → "Postscript AI Revenue"
+- "Hosting Costs" → "Hosting"
+- "PS Plus Servicing Costs" → "Postscript Plus Servicing Costs"
 
-**Carrier Pass-through (subtract from Gross to get Net):** Twilio Carrier Fees
+### Revenue Rollups (use these canonical names)
+- Messaging Revenue
+- Platform Revenue
+- Short Code Revenue
+- **Postscript AI Revenue** (covers all AI products: MAI, Shopper, Infinity Testing)
+- PS Plus Revenue
+- SMS Sales Revenue
+- Fondue Revenue
 
-**COGS:** Hosting, Twilio Messaging, Twilio Short Codes, SMS Sales COGS, Prepaid Cards, Postscript Plus Servicing Costs, CXAs Servicing Costs, MAI OpenAI Costs
+**Gross Revenue = sum of all 7 revenue rollups above**
 
-**OpEx:** Indirect Labor, T&E, Tech & IT, Professional Fees, Marketing Expense, Payment Processing, Other OpEx, Recruiting Expense, Bad Debt, Severance, Bank Fees, Twilio OPEX, Contra Payroll
+### Carrier Pass-through (subtract from Gross to get Net Revenue)
+- Twilio Carrier Fees
 
-**Other Income/Expense:** Other Income, Taxes, Depreciation and Amortization, Stock Comp Expense, Interest Expense, Other Expenses, Other Expense, Capitalized Software, Depreciation Expense
+### COGS Rollups (use these canonical names)
+1. Hosting
+2. Twilio Messaging
+3. Twilio Short Codes
+4. SMS Sales COGS
+5. Prepaid Cards
+6. Postscript Plus Servicing Costs
+7. CXAs Servicing Costs
+8. MAI OpenAI Costs
 
-## Key Metrics — EXACT FORMULAS (use these rollup names precisely)
+### OpEx Rollups
+Indirect Labor, T&E, Tech & IT, Professional Fees, Marketing Expense, Payment Processing, Other OpEx, Recruiting Expense, Bad Debt, Severance, Bank Fees, Twilio OPEX, Contra Payroll
 
-**IMPORTANT: "Net Revenue", "Gross Profit", "EBITDA" are NOT rollups in the data. You must CALCULATE them by summing the component rollups below.**
+### Other Income/Expense Rollups
+Other Income, Taxes, Depreciation and Amortization, Stock Comp Expense, Interest Expense, Other Expenses, Other Expense, Capitalized Software, Depreciation Expense
 
-**Gross Revenue** = Sum of these 8 rollups (for 2026 Budget):
-1. Fondue Revenue
-2. Marketing AI Revenue
-3. Messaging Revenue
-4. Platform Revenue
-5. PS Plus Revenue
-6. Shopper Revenue
-7. Short Code Revenue
-8. SMS Sales Revenue
+## Key Metrics — EXACT FORMULAS
 
-NOTE: Actuals may use slightly different rollup names (e.g., "Other Revenue", "Postscript AI Revenue" vs "Marketing AI Revenue"). Use explore_financial_data to verify exact names.
+**IMPORTANT: "Net Revenue", "Gross Profit", "EBITDA" are NOT rollups in the data. You must CALCULATE them by summing the component rollups.**
+
+**ALWAYS use explore_financial_data FIRST to verify exact rollup names exist before calculating.**
 
 **Net Revenue** = Gross Revenue - "Twilio Carrier Fees" rollup
 (You must query the gross revenue rollups AND Twilio Carrier Fees, then subtract)

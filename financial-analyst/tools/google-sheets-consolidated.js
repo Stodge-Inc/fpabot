@@ -105,6 +105,27 @@ const TAB_CONFIGS = {
   }
 };
 
+// Rollup name normalization - maps variant names to canonical names
+// This handles differences between 2025 Budget, 2026 Budget, and Actuals
+const ROLLUP_NORMALIZATION = {
+  // Revenue: 2025 Budget uses "Marketing AI Revenue", 2026 Budget/Actuals use "Postscript AI Revenue"
+  'Marketing AI Revenue': 'Postscript AI Revenue',
+
+  // COGS: 2026 Budget uses "Hosting Costs", others use "Hosting"
+  'Hosting Costs': 'Hosting',
+
+  // COGS: 2026 Budget uses "PS Plus Servicing Costs", others use "Postscript Plus Servicing Costs"
+  'PS Plus Servicing Costs': 'Postscript Plus Servicing Costs',
+};
+
+/**
+ * Normalize a rollup name to its canonical form
+ */
+function normalizeRollup(rollup) {
+  if (!rollup) return rollup;
+  return ROLLUP_NORMALIZATION[rollup] || rollup;
+}
+
 class GoogleSheetsClient {
   constructor() {
     this.sheetId = process.env.GOOGLE_BUDGET_SHEET_ID; // Same env var as before
@@ -301,7 +322,8 @@ class GoogleSheetsClient {
         record.department = row[colIndex[config.columns.department]];
       }
       if (config.columns.rollup && colIndex[config.columns.rollup] !== undefined) {
-        record.rollup = row[colIndex[config.columns.rollup]];
+        // Normalize rollup names to handle differences between Budget/Actuals
+        record.rollup = normalizeRollup(row[colIndex[config.columns.rollup]]);
       }
       if (config.columns.product && colIndex[config.columns.product] !== undefined) {
         record.product = row[colIndex[config.columns.product]];
