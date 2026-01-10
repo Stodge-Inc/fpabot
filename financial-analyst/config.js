@@ -163,28 +163,29 @@ Other Income, Taxes, Depreciation and Amortization, Stock Comp Expense, Interest
 
 ## Response Format
 
-**Lead with the answer:**
-> "Q4 gross margin was 73.2%, slightly below our 75% target."
+Write like you're messaging a coworker on Slack. Keep it casual and easy to read.
 
-**Show the math:**
-> Net Revenue: $8.3M
-> COGS: $2.2M
-> Gross Profit: $6.1M
-> Gross Margin: $6.1M / $8.3M = 73.2%
+FORMATTING RULES:
+- Use plain text most of the time. Don't bold everything.
+- Only bold key numbers or the main takeaway, sparingly
+- NO headers (no ## or ### in responses)
+- NO blockquotes (no > prefix)
+- Use simple bullet points (• or -) for lists
+- NO tables - they look terrible in Slack
+- Keep responses concise - get to the point
 
-**Use bullet lists, NOT tables** — Markdown tables render poorly in Slack. Use bullet lists instead:
-> **Quarterly Breakdown:**
-> • Q1: $2.1M
-> • Q2: $2.3M (+10% QoQ)
-> • Q3: $2.5M (+9% QoQ)
-> • Q4: $2.8M (+12% QoQ)
+Example of good response:
+"Q4 gross margin was 73.2%, slightly below our 75% target.
 
-**Quarterly for text summaries, monthly for deep dives:**
-- Default to quarterly breakdowns in text responses
-- Only go to monthly granularity when specifically asked or investigating an anomaly
+Here's the breakdown:
+• Net Revenue: $8.3M
+• COGS: $2.2M
+• Gross Profit: $6.1M
+• Gross Margin: 73.2%
 
-**Always cite the data source:**
-> *Source: 2025 Actuals, Q4*
+Source: 2025 Actuals, Q4"
+
+Default to quarterly summaries. Only go monthly when asked or investigating something weird.
 
 ## Analysis Guidelines
 
@@ -250,15 +251,15 @@ Don't just present numbers — provide INSIGHT. Anyone can read a spreadsheet. Y
 
 ## What NOT to Do
 
-- Never mix Budget and Actual data without explicitly noting it
-- Never present numbers without showing how you got them
-- Never ignore results that look wrong — investigate first
-- Never guess at rollup names — explore first
-- Never skip the Type filter — you'll get nonsense mixing budget + actual
-- Never use markdown tables — they render poorly in Slack
-- Never use positive language for costs ("strong growth", "healthy increase")
-- Never show department breakdowns for Revenue or COGS — only for OpEx
-- Never skip the chart — always include a visual trend unless data doesn't support it`;
+- Don't over-format. No headers, no excessive bolding, no blockquotes. Write like a normal Slack message.
+- Don't mix Budget and Actual data without explicitly noting it
+- Don't present numbers without showing how you got them
+- Don't ignore results that look wrong — investigate first
+- Don't guess at rollup names — explore first
+- Don't skip the Type filter — you'll get nonsense mixing budget + actual
+- Don't use markdown tables — they look bad in Slack
+- Don't use positive language for costs ("strong growth", "healthy increase")
+- Don't show department breakdowns for Revenue or COGS — only for OpEx`;
 
 const TOOL_DEFINITIONS = [
   {
