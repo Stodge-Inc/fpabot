@@ -6,6 +6,30 @@ const { google } = require('googleapis');
 // Tab configurations - maps tab patterns to their structure
 // Tab names updated 2026-01 to match current sheet structure
 const TAB_CONFIGS = {
+  // Combined BvA table - preferred source for income statement (has consistent rollup names)
+  'BvA Income Statement': {
+    statement: 'income_statement',
+    headerRow: 14,
+    // Type comes from Scenario column, not hardcoded
+    typeFromColumn: 'Scenario',
+    typeMapping: {
+      '2026 Budget': 'budget',
+      '2025 Budget': 'budget',
+      'Actuals': 'actuals'
+    },
+    columns: {
+      account: 'Account',
+      vendor: 'Vendor Name',
+      department: 'Department Aleph',
+      rollup: 'Consolidated Rollup Aleph',
+      month: 'Month',
+      value: 'Value',
+      year: 'Year',
+      quarter: 'Quarter',
+      scenario: 'Scenario'
+    }
+  },
+  // Legacy separate tabs - kept as fallback
   '2026 Budget - Income Statement': {
     type: 'budget',
     statement: 'income_statement',
@@ -292,8 +316,21 @@ class GoogleSheetsClient {
         year = monthDate.getFullYear().toString();
       }
 
-      // Determine type - for metrics, derive from date (past = actuals, future = budget)
+      // Determine type - can come from config, column, or be derived
       let recordType = config.type;
+
+      // If type comes from a column (e.g., Scenario column in BvA tables)
+      if (config.typeFromColumn && config.typeMapping) {
+        const typeColIdx = colIndex[config.typeFromColumn];
+        if (typeColIdx !== undefined) {
+          const scenarioValue = row[typeColIdx];
+          recordType = config.typeMapping[scenarioValue] || null;
+          // Skip rows with unknown scenario
+          if (!recordType) continue;
+        }
+      }
+
+      // For metrics, derive from date (past = actuals, future = budget)
       if (config.type === 'metrics' && monthDate) {
         const now = new Date();
         const firstOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -361,16 +398,41 @@ class GoogleSheetsClient {
 
     console.log(`[Sheets] Found ${tabs.length} tabs, checking for configured tabs...`);
 
+    // Check if BvA (combined) tabs exist - these are preferred over legacy separate tabs
+    const hasBvAIncomeStatement = tabs.some(t => t.includes('BvA Income Statement'));
+    const loadedStatements = new Set(); // Track which statements we've loaded
+
     for (const tabName of tabs) {
       const config = this.getTabConfig(tabName);
-      if (config) {
-        try {
-          const tabData = await this.loadTab(tabName);
-          console.log(`[Sheets] Loaded ${tabName}: ${tabData.length} rows, type=${config.type}`);
-          allData.push(...tabData);
-        } catch (err) {
-          console.error(`[Sheets] Error loading ${tabName}:`, err.message);
+      if (!config) continue;
+
+      // Skip legacy income statement tabs if BvA version exists
+      if (config.statement === 'income_statement') {
+        if (hasBvAIncomeStatement && !tabName.includes('BvA')) {
+          console.log(`[Sheets] Skipping ${tabName} (using BvA Income Statement instead)`);
+          continue;
         }
+      }
+
+      // Skip if we've already loaded this statement type from a BvA tab
+      const statementKey = config.statement;
+      if (loadedStatements.has(statementKey) && !tabName.includes('BvA')) {
+        console.log(`[Sheets] Skipping ${tabName} (already loaded from BvA)`);
+        continue;
+      }
+
+      try {
+        const tabData = await this.loadTab(tabName);
+        const typeInfo = config.typeFromColumn ? 'dynamic' : config.type;
+        console.log(`[Sheets] Loaded ${tabName}: ${tabData.length} rows, type=${typeInfo}`);
+        allData.push(...tabData);
+
+        // Mark this statement as loaded if it's from a BvA tab
+        if (tabName.includes('BvA')) {
+          loadedStatements.add(statementKey);
+        }
+      } catch (err) {
+        console.error(`[Sheets] Error loading ${tabName}:`, err.message);
       }
     }
 
