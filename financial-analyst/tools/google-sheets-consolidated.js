@@ -74,6 +74,27 @@ const TAB_CONFIGS = {
       // Quarter and Year derived from Month
     }
   },
+  // Combined BvA table for balance sheet
+  'BvA Balance Sheet': {
+    statement: 'balance_sheet',
+    headerRow: 14,
+    typeFromColumn: 'Scenario',
+    typeMapping: {
+      '2026 Budget': 'budget',
+      '2025 Budget': 'budget',
+      'Actuals': 'actuals'
+    },
+    columns: {
+      account: 'Account',
+      rollup: 'Consolidated Rollup Aleph',
+      month: 'Month',
+      value: 'Value',
+      year: 'Year',
+      quarter: 'Quarter',
+      scenario: 'Scenario'
+    }
+  },
+  // Legacy separate tabs - kept as fallback
   '2026 Budget - Balance Sheet': {
     type: 'budget',
     statement: 'balance_sheet',
@@ -400,18 +421,21 @@ class GoogleSheetsClient {
 
     // Check if BvA (combined) tabs exist - these are preferred over legacy separate tabs
     const hasBvAIncomeStatement = tabs.some(t => t.includes('BvA Income Statement'));
+    const hasBvABalanceSheet = tabs.some(t => t.includes('BvA Balance Sheet'));
     const loadedStatements = new Set(); // Track which statements we've loaded
 
     for (const tabName of tabs) {
       const config = this.getTabConfig(tabName);
       if (!config) continue;
 
-      // Skip legacy income statement tabs if BvA version exists
-      if (config.statement === 'income_statement') {
-        if (hasBvAIncomeStatement && !tabName.includes('BvA')) {
-          console.log(`[Sheets] Skipping ${tabName} (using BvA Income Statement instead)`);
-          continue;
-        }
+      // Skip legacy tabs if BvA version exists
+      if (config.statement === 'income_statement' && hasBvAIncomeStatement && !tabName.includes('BvA')) {
+        console.log(`[Sheets] Skipping ${tabName} (using BvA Income Statement instead)`);
+        continue;
+      }
+      if (config.statement === 'balance_sheet' && hasBvABalanceSheet && !tabName.includes('BvA')) {
+        console.log(`[Sheets] Skipping ${tabName} (using BvA Balance Sheet instead)`);
+        continue;
       }
 
       // Skip if we've already loaded this statement type from a BvA tab
