@@ -6,6 +6,7 @@ const http = require('http');
 const financialAnalyst = require('./financial-analyst');
 const chartStorage = require('./financial-analyst/tools/chart-storage');
 const metricsStore = require('./financial-analyst/metrics-store');
+const conversationStore = require('./financial-analyst/conversation-store');
 
 // Initialize Slack app with Socket Mode
 const app = new App({
@@ -226,12 +227,15 @@ app.message(async ({ message, client, logger }) => {
     // Check if this message @mentions us
     const botInfo = await client.auth.test();
     const botUserId = botInfo.user_id;
-
     const messageAtMentionsUs = message.text?.includes(`<@${botUserId}>`);
 
-    // Only respond if the user @mentions us in this message
-    // This prevents the bot from "chasing" users around threads
-    if (!messageAtMentionsUs) return;
+    // Check if we have an existing conversation in this thread
+    const existingConversation = await conversationStore.get(message.thread_ts);
+    const hasExistingConversation = existingConversation && existingConversation.length > 0;
+
+    // Respond if: (1) user @mentions us, OR (2) we already have a conversation in this thread
+    // This allows follow-up questions without re-mentioning, but prevents "chasing" into new threads
+    if (!messageAtMentionsUs && !hasExistingConversation) return;
 
     // Extract the question (remove the @mention)
     const question = message.text.replace(/<@[A-Z0-9]+>/g, '').trim();
