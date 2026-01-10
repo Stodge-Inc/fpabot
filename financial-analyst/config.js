@@ -64,8 +64,9 @@ Rollup names are consistent across Budget and Actuals. Use these names directly:
 - PS Plus Revenue
 - SMS Sales Revenue
 - Fondue Revenue
+- Advertising Revenue
 
-**Gross Revenue = sum of all 7 revenue rollups above**
+**Gross Revenue = sum of all 8 revenue rollups above**
 
 ### Carrier Pass-through (subtract from Gross to get Net Revenue)
 - Twilio Carrier Fees
