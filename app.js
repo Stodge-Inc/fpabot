@@ -97,7 +97,7 @@ app.event('app_mention', async ({ event, client, logger }) => {
   if (!question) {
     await client.chat.postMessage({
       channel: event.channel,
-      thread_ts: event.ts,
+      thread_ts: event.thread_ts || event.ts,
       text: "Hi! Ask me a question about budget, actuals, or financial metrics. For example:\n- What's our Q1 revenue budget?\n- What was our cash balance on 12/31?\n- How does actual headcount compare to budget?"
     });
     return;
@@ -105,10 +105,13 @@ app.event('app_mention', async ({ event, client, logger }) => {
 
   logger.info(`[FPA Bot] Question from ${event.user}: ${question.substring(0, 100)}...`);
 
+  // Use existing thread if we're in one, otherwise start new thread from this message
+  const threadTs = event.thread_ts || event.ts;
+
   // Post thinking indicator
   const thinkingMsg = await client.chat.postMessage({
     channel: event.channel,
-    thread_ts: event.ts,
+    thread_ts: threadTs,
     text: ':hourglass_flowing_sand: Analyzing...'
   });
 
@@ -117,7 +120,7 @@ app.event('app_mention', async ({ event, client, logger }) => {
     const response = await financialAnalyst.analyze(question, {
       userId: event.user,
       channelId: event.channel,
-      threadTs: event.ts
+      threadTs: threadTs
     });
 
     // Update thinking message with response
