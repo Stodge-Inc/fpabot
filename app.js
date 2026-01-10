@@ -194,35 +194,18 @@ app.message(async ({ message, client, logger }) => {
   }
 
   try {
-    // Get the parent message to check if this is an FPA Bot thread
-    const result = await client.conversations.replies({
-      channel: message.channel,
-      ts: message.thread_ts,
-      limit: 1
-    });
-
-    const parentMessage = result.messages?.[0];
-    if (!parentMessage) return;
-
-    // Check if the thread was started by an @mention to us
-    // Look for our bot ID in the parent message
+    // Check if this message @mentions us
     const botInfo = await client.auth.test();
     const botUserId = botInfo.user_id;
 
-    const wasAtMentioned = parentMessage.text?.includes(`<@${botUserId}>`);
-    if (!wasAtMentioned) {
-      // Also check if we replied in this thread (bot_id match)
-      const threadReplies = await client.conversations.replies({
-        channel: message.channel,
-        ts: message.thread_ts,
-        limit: 10
-      });
+    const messageAtMentionsUs = message.text?.includes(`<@${botUserId}>`);
 
-      const botReplied = threadReplies.messages?.some(m => m.bot_id);
-      if (!botReplied) return;
-    }
+    // Only respond if the user @mentions us in this message
+    // This prevents the bot from "chasing" users around threads
+    if (!messageAtMentionsUs) return;
 
-    const question = message.text?.trim();
+    // Extract the question (remove the @mention)
+    const question = message.text.replace(/<@[A-Z0-9]+>/g, '').trim();
     if (!question) return;
 
     logger.info(`[FPA Bot] Thread reply from ${message.user}: ${question.substring(0, 100)}...`);
