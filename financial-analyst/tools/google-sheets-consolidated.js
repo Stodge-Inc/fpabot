@@ -588,6 +588,19 @@ class GoogleSheetsClient {
       rollupTotals[key] = (rollupTotals[key] || 0) + (row.value || 0);
     }
 
+    // Debug logging for balance sheet queries
+    if (filters.Statement === 'balance_sheet' && filters.Month) {
+      console.log(`[Sheets DEBUG] Balance sheet query for ${filters.Month} ${filters.Year}:`);
+      console.log(`[Sheets DEBUG] Filtered rows: ${filtered.length}`);
+      // Log a few key rollups
+      const debugRollups = ['Accrued Revenue', 'Accounts Receivable', 'Cash'];
+      for (const r of debugRollups) {
+        if (rollupTotals[r] !== undefined) {
+          console.log(`[Sheets DEBUG] ${r}: ${rollupTotals[r]}`);
+        }
+      }
+    }
+
     // Aggregate by department
     const departmentTotals = {};
     for (const row of filtered) {
