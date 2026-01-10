@@ -124,10 +124,15 @@ app.event('app_mention', async ({ event, client, logger }) => {
       threadTs: threadTs
     });
 
-    // Update thinking message with response
-    await client.chat.update({
+    // Delete thinking message and post response (new message triggers notification)
+    await client.chat.delete({
       channel: event.channel,
-      ts: thinkingMsg.ts,
+      ts: thinkingMsg.ts
+    });
+
+    await client.chat.postMessage({
+      channel: event.channel,
+      thread_ts: threadTs,
       text: response.text,
       blocks: response.blocks
     });
@@ -194,10 +199,14 @@ app.message(async ({ message, client, logger }) => {
         threadTs: message.ts
       });
 
-      // Update thinking message with response
-      await client.chat.update({
+      // Delete thinking message and post response (new message triggers notification)
+      await client.chat.delete({
         channel: message.channel,
-        ts: thinkingMsg.ts,
+        ts: thinkingMsg.ts
+      });
+
+      await client.chat.postMessage({
+        channel: message.channel,
         text: response.text,
         blocks: response.blocks
       });
@@ -260,10 +269,15 @@ app.message(async ({ message, client, logger }) => {
       threadTs: message.thread_ts
     });
 
-    // Update thinking message with response
-    await client.chat.update({
+    // Delete thinking message and post response (new message triggers notification)
+    await client.chat.delete({
       channel: message.channel,
-      ts: thinkingMsg.ts,
+      ts: thinkingMsg.ts
+    });
+
+    await client.chat.postMessage({
+      channel: message.channel,
+      thread_ts: message.thread_ts,
       text: response.text,
       blocks: response.blocks
     });
