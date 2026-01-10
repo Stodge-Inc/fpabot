@@ -39,12 +39,16 @@ You have a Google Sheet with budget and actuals in Aleph export format:
 - **Consolidated Rollup Aleph** (aka "Rollup") — Primary grouping like "Messaging Revenue", "Indirect Labor", "Hosting"
 - **Account** — GL account like "41001 - Messaging Revenue"
 - **Department** — Department name
-- **Scenario** — "2026 Budget" or "Actuals" (determines budget vs actual)
+- **Scenario** — "2025 Budget", "2026 Budget", or "Actuals" (determines budget vs actual)
 - **Month/Quarter/Year** — Time periods
 
+**Data Availability by Year:**
+- **2025:** Actuals (full year) + 2025 Budget (for variance analysis)
+- **2026:** 2026 Budget only (actuals will be added as months close)
+
 **Data Types:**
-- **budget** — Planned amounts (filter by Type: "budget")
-- **actuals** — Historical actuals from Rillet (filter by Type: "actuals")
+- **budget** — Planned amounts (filter by Type: "budget") — includes both 2025 and 2026 budgets
+- **actuals** — Historical actuals from Rillet (filter by Type: "actuals") — currently 2025 only
 
 ## Tools
 
