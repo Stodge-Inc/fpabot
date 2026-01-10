@@ -677,6 +677,45 @@ class GoogleSheetsClient {
     const ebitda = grossProfit - totalOpEx;
     const ebitdaMargin = netRevenue > 0 ? (ebitda / netRevenue * 100) : 0;
 
+    // Calculate quarterly net revenue breakdown
+    const quarterlyNetRevenue = {};
+    for (const quarter of quarterOrder) {
+      // Get revenue and carrier fees for this quarter
+      const qRows = filtered.filter(r => r.quarter === quarter);
+      let qGrossRev = 0;
+      let qCarrierFees = 0;
+      for (const row of qRows) {
+        if (revenueRollups.includes(row.rollup)) {
+          qGrossRev += row.value || 0;
+        }
+        if (row.rollup === 'Twilio Carrier Fees') {
+          qCarrierFees += row.value || 0;
+        }
+      }
+      if (qGrossRev > 0 || qCarrierFees > 0) {
+        quarterlyNetRevenue[quarter] = qGrossRev - qCarrierFees;
+      }
+    }
+
+    // Calculate monthly net revenue breakdown
+    const monthlyNetRevenue = {};
+    for (const month of monthOrder) {
+      const mRows = filtered.filter(r => r.month === month);
+      let mGrossRev = 0;
+      let mCarrierFees = 0;
+      for (const row of mRows) {
+        if (revenueRollups.includes(row.rollup)) {
+          mGrossRev += row.value || 0;
+        }
+        if (row.rollup === 'Twilio Carrier Fees') {
+          mCarrierFees += row.value || 0;
+        }
+      }
+      if (mGrossRev > 0 || mCarrierFees > 0) {
+        monthlyNetRevenue[month] = mGrossRev - mCarrierFees;
+      }
+    }
+
     // Only include calculated_metrics if we have income statement data
     const hasIncomeStatementData = grossRevenue > 0 || totalCOGS > 0 || totalOpEx > 0;
     const calculatedMetrics = hasIncomeStatementData ? {
@@ -688,7 +727,9 @@ class GoogleSheetsClient {
       gross_margin_pct: Math.round(grossMargin * 10) / 10,
       total_opex: totalOpEx,
       ebitda: ebitda,
-      ebitda_margin_pct: Math.round(ebitdaMargin * 10) / 10
+      ebitda_margin_pct: Math.round(ebitdaMargin * 10) / 10,
+      quarterly_net_revenue: Object.keys(quarterlyNetRevenue).length > 0 ? quarterlyNetRevenue : undefined,
+      monthly_net_revenue: Object.keys(monthlyNetRevenue).length > 0 ? monthlyNetRevenue : undefined
     } : undefined;
 
     return {
