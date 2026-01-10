@@ -647,10 +647,55 @@ class GoogleSheetsClient {
     }
     console.log('[Sheets] Query results by source tab:', JSON.stringify(byTab));
 
+    // Calculate key financial metrics from rollup totals
+    // Revenue rollups
+    const revenueRollups = [
+      'Messaging Revenue', 'Platform Revenue', 'Short Code Revenue',
+      'Postscript AI Revenue', 'PS Plus Revenue', 'SMS Sales Revenue',
+      'Fondue Revenue', 'Advertising Revenue'
+    ];
+    const grossRevenue = revenueRollups.reduce((sum, r) => sum + (rollupTotals[r] || 0), 0);
+    const carrierFees = rollupTotals['Twilio Carrier Fees'] || 0;
+    const netRevenue = grossRevenue - carrierFees;
+
+    // COGS rollups
+    const cogsRollups = [
+      'Hosting', 'Twilio Messaging', 'Twilio Short Codes', 'SMS Sales COGS',
+      'Prepaid Cards', 'Postscript Plus Servicing Costs', 'CXAs Servicing Costs', 'MAI OpenAI Costs'
+    ];
+    const totalCOGS = cogsRollups.reduce((sum, r) => sum + (rollupTotals[r] || 0), 0);
+    const grossProfit = netRevenue - totalCOGS;
+    const grossMargin = netRevenue > 0 ? (grossProfit / netRevenue * 100) : 0;
+
+    // OpEx rollups
+    const opexRollups = [
+      'Indirect Labor', 'T&E', 'Tech & IT', 'Professional Fees', 'Marketing Expense',
+      'Payment Processing', 'Other OpEx', 'Recruiting Expense', 'Bad Debt', 'Severance',
+      'Bank Fees', 'Twilio OPEX', 'Contra Payroll'
+    ];
+    const totalOpEx = opexRollups.reduce((sum, r) => sum + (rollupTotals[r] || 0), 0);
+    const ebitda = grossProfit - totalOpEx;
+    const ebitdaMargin = netRevenue > 0 ? (ebitda / netRevenue * 100) : 0;
+
+    // Only include calculated_metrics if we have income statement data
+    const hasIncomeStatementData = grossRevenue > 0 || totalCOGS > 0 || totalOpEx > 0;
+    const calculatedMetrics = hasIncomeStatementData ? {
+      gross_revenue: grossRevenue,
+      carrier_fees: carrierFees,
+      net_revenue: netRevenue,
+      total_cogs: totalCOGS,
+      gross_profit: grossProfit,
+      gross_margin_pct: Math.round(grossMargin * 10) / 10,
+      total_opex: totalOpEx,
+      ebitda: ebitda,
+      ebitda_margin_pct: Math.round(ebitdaMargin * 10) / 10
+    } : undefined;
+
     return {
       filters_applied: filters,
       row_count: filtered.length,
       total_amount: totalAmount,
+      calculated_metrics: calculatedMetrics,
       rollup_totals: rollupTotals,
       monthly_totals: Object.keys(monthlyTotals).length > 0 ? monthlyTotals : undefined,
       quarterly_totals: Object.keys(quarterlyTotals).length > 0 ? quarterlyTotals : undefined,

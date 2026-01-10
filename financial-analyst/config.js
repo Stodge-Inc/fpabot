@@ -91,50 +91,32 @@ Indirect Labor, T&E, Tech & IT, Professional Fees, Marketing Expense, Payment Pr
 ### Other Income/Expense Rollups
 Other Income, Taxes, Depreciation and Amortization, Stock Comp Expense, Interest Expense, Other Expenses, Other Expense, Capitalized Software, Depreciation Expense
 
-## Key Metrics — EXACT FORMULAS
+## Key Metrics — USE PRE-CALCULATED VALUES
 
-**IMPORTANT: "Net Revenue", "Gross Profit", "EBITDA" are NOT rollups in the data. You must CALCULATE them by summing the component rollups.**
+**IMPORTANT: The query_financial_data tool returns a \`calculated_metrics\` object with pre-computed values. USE THESE — do NOT calculate them yourself.**
 
-**PRECISION: Keep full precision during all intermediate calculations. Only round to millions/thousands when displaying the FINAL answer. Do NOT round each line item before summing — this causes significant errors.**
+**The \`calculated_metrics\` object contains:**
+- \`gross_revenue\` — Sum of all 8 revenue rollups
+- \`carrier_fees\` — Twilio Carrier Fees
+- \`net_revenue\` — Gross Revenue minus Carrier Fees (THIS IS THE PRIMARY METRIC)
+- \`total_cogs\` — Sum of all COGS rollups
+- \`gross_profit\` — Net Revenue minus COGS
+- \`gross_margin_pct\` — Gross Profit / Net Revenue as percentage
+- \`total_opex\` — Sum of all OpEx rollups
+- \`ebitda\` — Gross Profit minus OpEx
+- \`ebitda_margin_pct\` — EBITDA / Net Revenue as percentage
 
-**ALWAYS use explore_financial_data FIRST to verify exact rollup names exist before calculating.**
+**ALWAYS use the values from \`calculated_metrics\` in your response. Do NOT do your own arithmetic — this causes errors.**
 
-**Net Revenue** = Gross Revenue - "Twilio Carrier Fees" rollup
-(You must query the gross revenue rollups AND Twilio Carrier Fees, then subtract)
+**Example:** If the query returns \`calculated_metrics.net_revenue: 88519884\`, report "Net Revenue: $88.5M" — do NOT try to sum the rollups yourself.
 
-**COGS** = Sum of ALL 8 of these rollups (DO NOT SKIP ANY):
-1. Hosting
-2. Twilio Messaging
-3. Twilio Short Codes (see adjustment below)
-4. SMS Sales COGS
-5. Prepaid Cards
-6. Postscript Plus Servicing Costs
-7. CXAs Servicing Costs
-8. MAI OpenAI Costs
-
-**IMPORTANT: You MUST include ALL 8 COGS items above. Missing any will make gross margin wrong.**
-
-**MANUAL ADJUSTMENT - Free Short Codes:**
+**MANUAL ADJUSTMENT - Free Short Codes (only for detailed gross margin analysis):**
 - We allocate ~$160K/month of Twilio Short Codes to Marketing Expense (not COGS)
-- These are "free short codes" given to customers as a sales/marketing incentive
-- When calculating COGS, subtract $160K × number of months from "Twilio Short Codes"
-- Example: For full year, subtract $1.92M ($160K × 12) from Twilio Short Codes
-- Example: For Q4, subtract $480K ($160K × 3) from Twilio Short Codes
-- ALWAYS note in your response: "*Gross margin assumes $160K/month free short code allocation to marketing expense*"
-
-**Gross Profit** = Net Revenue - COGS
-(This is a calculation, not a rollup query)
-
-**Gross Margin** = Gross Profit / Net Revenue (target: 65-75%)
+- The \`calculated_metrics.total_cogs\` does NOT include this adjustment
+- For detailed gross margin work, subtract $160K × number of months from COGS
+- ALWAYS note: "*Gross margin assumes $160K/month free short code allocation to marketing expense*"
 
 **CHART FORMAT: When charting margins or percentages, ALWAYS use format: "percent"**
-
-**HOW TO CALCULATE:** Query the income statement for the period, then use rollup_totals to sum the right categories. Example for Q4 2025:
-1. Query: { Type: "actuals", Year: "2025", Quarter: "Q4", Statement: "income_statement" }
-2. From rollup_totals, sum ALL revenue rollups (check exact names with explore first) = Gross Revenue
-3. Net Revenue = Gross Revenue - Twilio Carrier Fees (from rollup_totals)
-4. Sum ALL 8 COGS rollups from rollup_totals
-5. Gross Profit = Net Revenue - COGS
 
 **OpEx** = Sum of:
 - Indirect Labor
@@ -310,8 +292,11 @@ STRATEGY:
 - DO NOT query month-by-month or quarter-by-quarter - one query returns all periods!
 
 Returns:
-- total_amount: Sum of all matching rows
-- rollup_totals: Sums by Rollup (main grouping - use this for calculations!)
+- calculated_metrics: PRE-COMPUTED key metrics (USE THESE, don't calculate yourself!):
+  - net_revenue, gross_revenue, carrier_fees
+  - gross_profit, gross_margin_pct, total_cogs
+  - ebitda, ebitda_margin_pct, total_opex
+- rollup_totals: Sums by Rollup (for detailed breakdowns)
 - monthly_totals: Sums by Month (Jan, Feb, etc.) - USE THIS FOR MONTHLY CHARTS
 - quarterly_totals: Sums by Quarter (Q1, Q2, Q3, Q4) - USE THIS FOR QUARTERLY SUMMARIES
 - department_totals: Sums by Department (only meaningful for OpEx!)
