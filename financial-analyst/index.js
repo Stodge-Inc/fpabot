@@ -7,7 +7,7 @@ const { SYSTEM_PROMPT, TOOL_DEFINITIONS } = require('./config');
 const conversationStore = require('./conversation-store');
 
 // Maximum iterations to prevent infinite tool loops
-const MAX_TOOL_ITERATIONS = 10;
+const MAX_TOOL_ITERATIONS = 15;
 
 /**
  * Analyze a financial question using Claude with tool use
