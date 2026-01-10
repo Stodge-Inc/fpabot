@@ -282,7 +282,9 @@ class GoogleSheetsClient {
   async loadTab(tabName) {
     // Check cache
     const cacheKey = tabName;
-    if (this.cachedTabs[cacheKey] && this.cacheTime && (Date.now() - this.cacheTime < this.CACHE_TTL_MS)) {
+    const cacheAge = this.cacheTime ? Date.now() - this.cacheTime : null;
+    if (this.cachedTabs[cacheKey] && this.cacheTime && cacheAge < this.CACHE_TTL_MS) {
+      console.log(`[Sheets] Cache hit for ${tabName} (age: ${Math.round(cacheAge/1000)}s)`);
       return this.cachedTabs[cacheKey];
     }
 
