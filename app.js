@@ -5,6 +5,7 @@ const { App } = require('@slack/bolt');
 const http = require('http');
 const financialAnalyst = require('./financial-analyst');
 const chartStorage = require('./financial-analyst/tools/chart-storage');
+const metricsStore = require('./financial-analyst/metrics-store');
 
 // Initialize Slack app with Socket Mode
 const app = new App({
@@ -42,6 +43,31 @@ const server = http.createServer(async (req, res) => {
     }
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Chart not found');
+    return;
+  }
+
+  // Metrics refresh endpoint: POST /refresh-metrics
+  if (req.url === '/refresh-metrics' && req.method === 'POST') {
+    console.log('[Metrics] Manual refresh triggered');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'started', message: 'Metrics refresh started in background' }));
+    // Run refresh in background (don't await)
+    metricsStore.refreshAllMetrics().catch(err => {
+      console.error('[Metrics] Refresh failed:', err.message);
+    });
+    return;
+  }
+
+  // Metrics status endpoint: GET /metrics-status
+  if (req.url === '/metrics-status') {
+    try {
+      const lastRefresh = await metricsStore.getLastRefreshTime();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ last_refresh: lastRefresh }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
     return;
   }
 
@@ -255,6 +281,14 @@ app.message(async ({ message, client, logger }) => {
   server.listen(port, () => {
     console.log(`HTTP health check server listening on port ${port}`);
   });
+
+  // Initialize metrics table
+  try {
+    await metricsStore.initializeTable();
+    console.log('Metrics store initialized');
+  } catch (err) {
+    console.error('Failed to initialize metrics store:', err.message);
+  }
 
   // Start Slack app (Socket Mode connects via WebSocket)
   await app.start();
