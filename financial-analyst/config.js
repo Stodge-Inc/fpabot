@@ -97,12 +97,21 @@ Other Income, Taxes, Depreciation and Amortization, Stock Comp Expense, Interest
 
 **For these metrics, ALWAYS query the Metrics tab first — do NOT calculate from income statement:**
 - **Net Revenue** — \`{ Statement: "metrics", "Metric Name": "Net Revenue", Type: "actuals", Year: "2025" }\`
-- **Net Messaging Revenue** — Messaging revenue minus carrier fees
+- **Gross Revenue** — Sum of all revenue rollups (use Metrics tab value)
 - **Gross Profit** — Net Revenue minus COGS
 - **EBITDA** — Use this instead of calculating from rollups
 - **Ending Cash** — Month-end cash balance
 
 The Metrics tab values are authoritative. Only fall back to calculated_metrics if the metric isn't in the Metrics tab.
+
+**Aggregating Monthly to Quarterly:**
+The Metrics tab has monthly data. To get quarterly values, SUM the months:
+- Q1 = Jan + Feb + Mar
+- Q2 = Apr + May + Jun
+- Q3 = Jul + Aug + Sep
+- Q4 = Oct + Nov + Dec
+
+The query response includes \`monthly_totals\` — use these to calculate quarterly values when needed. Do NOT say "quarterly data not available" if you have monthly data.
 
 ---
 
