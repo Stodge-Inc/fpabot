@@ -133,11 +133,16 @@ const TAB_CONFIGS = {
       // Quarter and Year derived from Month
     }
   },
-  // Combined Metrics table (type derived from date: past = actuals, future = budget)
+  // Combined Metrics table (type from Scenario column)
   'Metrics': {
-    type: 'metrics',
     statement: 'metrics',
     headerRow: 14,
+    typeFromColumn: 'Scenario',
+    typeMapping: {
+      '2026 Budget': 'budget',
+      '2025 Budget': 'budget',
+      'Actuals': 'actuals'
+    },
     columns: {
       department: 'Department',
       product: 'Product',
@@ -145,8 +150,8 @@ const TAB_CONFIGS = {
       metricType: 'Metric Type',
       month: 'Month',
       value: 'value',
-      quarter: 'Quarter',
-      year: 'Year'
+      year: 'Year',
+      scenario: 'Scenario'
     }
   },
   // Legacy metrics tab
@@ -241,15 +246,32 @@ class GoogleSheetsClient {
   }
 
   /**
-   * Parse a date value from the sheet (handles Excel serial dates and ISO strings)
+   * Parse a date value from the sheet (handles Excel serial dates, ISO strings, and text months)
    */
   parseDate(value) {
     if (!value) return null;
 
-    // If it's already a Date object or ISO string
+    // If it's already a Date object
     if (value instanceof Date) return value;
-    if (typeof value === 'string' && value.includes('-')) {
-      return new Date(value);
+
+    // Handle text month formats like "Apr-2026", "April-2026", "Jan-2027"
+    if (typeof value === 'string') {
+      // Try to parse "Month-Year" or "Mon-Year" format
+      const monthYearMatch = value.match(/^([A-Za-z]+)-?(\d{4})$/);
+      if (monthYearMatch) {
+        const monthStr = monthYearMatch[1];
+        const year = parseInt(monthYearMatch[2]);
+        const monthNum = this.parseMonthName(monthStr);
+        if (monthNum !== null && year) {
+          return new Date(year, monthNum - 1, 1);
+        }
+      }
+
+      // Try ISO string format
+      if (value.includes('-') && value.length >= 10) {
+        const d = new Date(value);
+        if (!isNaN(d.getTime())) return d;
+      }
     }
 
     // Excel serial date (days since 1900-01-01, with Excel's leap year bug)
@@ -259,6 +281,28 @@ class GoogleSheetsClient {
     }
 
     return null;
+  }
+
+  /**
+   * Parse month name to number (1-12)
+   */
+  parseMonthName(monthStr) {
+    if (!monthStr) return null;
+    const monthMap = {
+      'jan': 1, 'january': 1,
+      'feb': 2, 'february': 2,
+      'mar': 3, 'march': 3,
+      'apr': 4, 'april': 4,
+      'may': 5,
+      'jun': 6, 'june': 6,
+      'jul': 7, 'july': 7,
+      'aug': 8, 'august': 8,
+      'sep': 9, 'sept': 9, 'september': 9,
+      'oct': 10, 'october': 10,
+      'nov': 11, 'november': 11,
+      'dec': 12, 'december': 12
+    };
+    return monthMap[monthStr.toLowerCase()] || null;
   }
 
   /**
@@ -370,8 +414,9 @@ class GoogleSheetsClient {
         }
       }
 
-      // For metrics, derive from date (past = actuals, future = budget)
-      if (config.type === 'metrics' && monthDate) {
+      // Legacy metrics tab: derive type from date (past = actuals, future = budget)
+      // Only applies when type is hardcoded as 'metrics' (not using typeFromColumn)
+      if (config.type === 'metrics' && !config.typeFromColumn && monthDate) {
         const now = new Date();
         const firstOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         recordType = monthDate < firstOfCurrentMonth ? 'actuals' : 'budget';

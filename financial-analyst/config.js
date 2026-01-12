@@ -106,7 +106,7 @@ Available metrics (by Metric Name):
 
 Query with: \`{ Statement: "metrics", "Metric Name": "Net Revenue", Type: "actuals", Year: "2025" }\`
 
-Each metric has Type: "actuals" or "budget" — always specify.
+The Metrics tab has explicit Type: "actuals" or "budget" — always specify which you want.
 
 ---
 
