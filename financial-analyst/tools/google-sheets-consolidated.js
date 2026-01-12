@@ -601,8 +601,10 @@ class GoogleSheetsClient {
       'Year': 'year',
       'Product': 'product',
       'Metric': 'rollup', // Metric maps to rollup for convenience
-      'MetricName': 'metricName',
-      'MetricType': 'metricType'
+      'Metric Name': 'metricName', // With space - used by tool schema
+      'MetricName': 'metricName',  // Without space - legacy
+      'MetricType': 'metricType',
+      'Metric Type': 'metricType'  // With space
     };
 
     let filtered = allData;
