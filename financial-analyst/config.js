@@ -178,7 +178,10 @@ When data quality, timing, or assumptions affect interpretation, state confidenc
 
 - Include chart with any time-series analysis
 - Monthly by default
-- Line for trends, bar for comparisons, comparison for BvA
+- Line for trends, bar for single series comparisons
+- **Comparison charts**: Use for BvA OR year-over-year comparisons
+  - For BvA: Use default labels (Budget/Actual)
+  - For year-over-year: Set series1_label="2025" and series2_label="2026" (or appropriate years)
 - Use format: "percent" for margins/ratios
 - Skip only for single data points or non-visual answers
 
