@@ -104,7 +104,7 @@ const toolImplementations = {
 
   // Generate a chart image using Vega-Lite
   'generate_chart': async (input) => {
-    const { chart_type, title, labels, values, budget_values, actual_values, format = 'currency' } = input;
+    const { chart_type, title, labels, values, budget_values, actual_values, series1_label, series2_label, format = 'currency' } = input;
 
     try {
       // Create Vega-Lite spec based on chart type
@@ -123,7 +123,9 @@ const toolImplementations = {
             labels,
             budgetValues: budget_values,
             actualValues: actual_values,
-            format
+            format,
+            series1Label: series1_label,
+            series2Label: series2_label
           });
           break;
         default:

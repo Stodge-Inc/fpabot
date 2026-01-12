@@ -217,29 +217,31 @@ function lineChart({ title, labels, values, color = DEFAULT_COLOR }) {
 }
 
 /**
- * Generate a comparison bar chart (budget vs actual)
+ * Generate a comparison bar chart (budget vs actual, or year-over-year)
  * @param {object} options
  * @param {string} options.title - Chart title
  * @param {string[]} options.labels - X-axis labels
- * @param {number[]} options.budgetValues - Budget data
- * @param {number[]} options.actualValues - Actual data
+ * @param {number[]} options.budgetValues - First series data (or series1_values)
+ * @param {number[]} options.actualValues - Second series data (or series2_values)
+ * @param {string} options.series1Label - Label for first series (default: "Budget")
+ * @param {string} options.series2Label - Label for second series (default: "Actual")
  * @returns {string} - QuickChart URL
  */
-function comparisonChart({ title, labels, budgetValues, actualValues }) {
+function comparisonChart({ title, labels, budgetValues, actualValues, series1Label = 'Budget', series2Label = 'Actual' }) {
   const configStr = `{
     "type": "bar",
     "data": {
       "labels": ${JSON.stringify(labels)},
       "datasets": [
         {
-          "label": "Budget",
+          "label": ${JSON.stringify(series1Label)},
           "data": ${JSON.stringify(budgetValues)},
           "backgroundColor": "${COLORS.primary.teal}",
           "borderRadius": 4,
           "borderSkipped": false
         },
         {
-          "label": "Actual",
+          "label": ${JSON.stringify(series2Label)},
           "data": ${JSON.stringify(actualValues)},
           "backgroundColor": "${COLORS.primary.purple}",
           "borderRadius": 4,

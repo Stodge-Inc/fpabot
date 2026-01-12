@@ -397,7 +397,7 @@ Use this for budget-vs-actual analysis instead of making two separate queries.`,
 Chart types:
 - "bar": Vertical bar chart (default) - good for comparing periods
 - "line": Line chart - good for trends over time
-- "comparison": Side-by-side bars for budget vs actual
+- "comparison": Side-by-side bars for budget vs actual, OR for year-over-year comparisons (use series1_label and series2_label to customize legend)
 
 Format:
 - "currency": Dollar formatting ($1.2M, $500K) - DEFAULT for revenue, costs, profits
@@ -435,6 +435,14 @@ The returned URL will display as an image in Slack. Include it in your response.
           type: 'array',
           items: { type: 'number' },
           description: 'Actual values (for comparison charts only)'
+        },
+        series1_label: {
+          type: 'string',
+          description: 'Label for first series in comparison chart (default: "Budget"). Use for year-over-year comparisons like "2025".'
+        },
+        series2_label: {
+          type: 'string',
+          description: 'Label for second series in comparison chart (default: "Actual"). Use for year-over-year comparisons like "2026".'
         },
         format: {
           type: 'string',

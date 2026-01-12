@@ -279,14 +279,16 @@ function lineChartSpec({ title, labels, values, format = 'currency' }) {
 }
 
 /**
- * Create a comparison (budget vs actual) bar chart spec with data labels
+ * Create a comparison (budget vs actual, or year-over-year) bar chart spec with data labels
  * @param {string} format - 'currency' (default) or 'percent'
+ * @param {string} series1Label - Label for first series (default: 'Budget')
+ * @param {string} series2Label - Label for second series (default: 'Actual')
  */
-function comparisonChartSpec({ title, labels, budgetValues, actualValues, format = 'currency' }) {
+function comparisonChartSpec({ title, labels, budgetValues, actualValues, format = 'currency', series1Label = 'Budget', series2Label = 'Actual' }) {
   const data = [];
   labels.forEach((label, i) => {
-    data.push({ category: label, type: 'Budget', value: budgetValues[i], label: formatValue(budgetValues[i], format) });
-    data.push({ category: label, type: 'Actual', value: actualValues[i], label: formatValue(actualValues[i], format) });
+    data.push({ category: label, type: series1Label, value: budgetValues[i], label: formatValue(budgetValues[i], format) });
+    data.push({ category: label, type: series2Label, value: actualValues[i], label: formatValue(actualValues[i], format) });
   });
 
   // Get sort order
@@ -350,7 +352,7 @@ function comparisonChartSpec({ title, labels, budgetValues, actualValues, format
             field: 'type',
             type: 'nominal',
             scale: {
-              domain: ['Budget', 'Actual'],
+              domain: [series1Label, series2Label],
               range: [COLORS.teal, COLORS.purple]
             },
             legend: {
