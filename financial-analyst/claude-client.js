@@ -11,6 +11,8 @@ class ClaudeClient {
     this.client = null;
     this.model = process.env.CLAUDE_MODEL || SONNET_MODEL;
     this.fallbackModel = SONNET_MODEL;
+    this.usingFallback = false; // Sticky fallback - once triggered, stays on for this session
+    this.fallbackUntil = null; // Time when we can try primary model again
   }
 
   initialize() {
@@ -72,6 +74,20 @@ class ClaudeClient {
   }
 
   /**
+   * Get the current model to use (respects sticky fallback)
+   */
+  getCurrentModel() {
+    // Check if fallback period has expired (5 minutes)
+    if (this.usingFallback && this.fallbackUntil && Date.now() > this.fallbackUntil) {
+      console.log(`[Claude] Fallback period expired, will try primary model (${this.model}) again`);
+      this.usingFallback = false;
+      this.fallbackUntil = null;
+    }
+
+    return this.usingFallback ? this.fallbackModel : this.model;
+  }
+
+  /**
    * Create a message with retry logic and fallback model
    * @param {object} options - Same as createMessage
    * @param {number} maxRetries - Maximum retry attempts per model
@@ -79,29 +95,51 @@ class ClaudeClient {
    */
   async createMessageWithRetry(options, maxRetries = 5) {
     let lastError = null;
-    let usedFallback = false;
+    const currentModel = this.getCurrentModel();
 
-    // Try primary model first
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
+    // If already using fallback, go straight to fallback model with fewer retries
+    if (this.usingFallback) {
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          return await this.createMessage({ ...options, model: this.fallbackModel });
+        } catch (error) {
+          lastError = error;
+
+          if ((error.status === 429 || error.status === 529) && attempt < maxRetries - 1) {
+            const waitTime = Math.pow(2, attempt) * 1000;
+            console.log(`[Claude] Fallback model error, waiting ${waitTime}ms (attempt ${attempt + 1}/${maxRetries})...`);
+            await this.sleep(waitTime);
+            continue;
+          }
+
+          if (error.status !== 429 && error.status !== 529) {
+            throw error;
+          }
+        }
+      }
+      throw lastError || new Error('Max retries exceeded for fallback model');
+    }
+
+    // Try primary model first (only 2 attempts before falling back quickly)
+    const primaryRetries = 2;
+    for (let attempt = 0; attempt < primaryRetries; attempt++) {
       try {
         return await this.createMessage(options);
       } catch (error) {
         lastError = error;
 
         // Check if it's a rate limit error (429)
-        if (error.status === 429 && attempt < maxRetries - 1) {
-          const waitTime = Math.pow(2, attempt) * 1000; // Exponential backoff
-          console.log(`[Claude] Rate limited, waiting ${waitTime}ms before retry (attempt ${attempt + 1}/${maxRetries})...`);
+        if (error.status === 429 && attempt < primaryRetries - 1) {
+          const waitTime = Math.pow(2, attempt) * 1000;
+          console.log(`[Claude] Rate limited, waiting ${waitTime}ms before retry (attempt ${attempt + 1}/${primaryRetries})...`);
           await this.sleep(waitTime);
           continue;
         }
 
-        // Check for overloaded error (529)
-        if (error.status === 529 && attempt < maxRetries - 1) {
-          const waitTime = Math.pow(2, attempt) * 2000;
-          console.log(`[Claude] API overloaded, waiting ${waitTime}ms before retry (attempt ${attempt + 1}/${maxRetries})...`);
-          await this.sleep(waitTime);
-          continue;
+        // Check for overloaded error (529) - fall back faster
+        if (error.status === 529) {
+          console.log(`[Claude] Primary model (${this.model}) overloaded. Falling back to ${this.fallbackModel}...`);
+          break; // Exit loop and go to fallback
         }
 
         // For other errors, don't retry
@@ -111,10 +149,12 @@ class ClaudeClient {
       }
     }
 
-    // If primary model exhausted retries due to overload, try fallback model
+    // Fall back to Sonnet
     if (lastError?.status === 529 && this.model !== this.fallbackModel) {
-      console.log(`[Claude] Primary model (${this.model}) overloaded after ${maxRetries} attempts. Falling back to ${this.fallbackModel}...`);
-      usedFallback = true;
+      // Set sticky fallback for 5 minutes
+      this.usingFallback = true;
+      this.fallbackUntil = Date.now() + 5 * 60 * 1000;
+      console.log(`[Claude] Sticky fallback enabled for 5 minutes`);
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
@@ -139,8 +179,7 @@ class ClaudeClient {
     }
 
     // All retries exhausted
-    const modelInfo = usedFallback ? `${this.model} and fallback ${this.fallbackModel}` : this.model;
-    throw new Error(`Max retries exceeded for Claude API (tried ${modelInfo})`);
+    throw new Error(`Max retries exceeded for Claude API`);
   }
 
   sleep(ms) {
