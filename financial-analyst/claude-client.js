@@ -2,10 +2,15 @@
 
 const Anthropic = require('@anthropic-ai/sdk');
 
+// Models
+const OPUS_MODEL = 'claude-opus-4-5-20251101';
+const SONNET_MODEL = 'claude-sonnet-4-20250514';
+
 class ClaudeClient {
   constructor() {
     this.client = null;
-    this.model = process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514'; // Sonnet for better reasoning
+    this.model = process.env.CLAUDE_MODEL || SONNET_MODEL;
+    this.fallbackModel = SONNET_MODEL;
   }
 
   initialize() {
@@ -29,10 +34,13 @@ class ClaudeClient {
    * @param {Array} options.messages - Conversation messages
    * @param {Array} options.tools - Tool definitions
    * @param {number} options.max_tokens - Maximum tokens in response
+   * @param {string} options.model - Optional model override
    * @returns {Promise<object>} - Claude API response
    */
-  async createMessage({ system, messages, tools, max_tokens = 4096 }) {
+  async createMessage({ system, messages, tools, max_tokens = 4096, model = null }) {
     this.initialize();
+
+    const useModel = model || this.model;
 
     // Use prompt caching for the system prompt (90% cheaper, doesn't count against rate limits)
     const systemWithCache = [
@@ -44,7 +52,7 @@ class ClaudeClient {
     ];
 
     const response = await this.client.messages.create({
-      model: this.model,
+      model: useModel,
       max_tokens,
       system: systemWithCache,
       messages,
@@ -64,37 +72,75 @@ class ClaudeClient {
   }
 
   /**
-   * Create a message with retry logic for rate limits
+   * Create a message with retry logic and fallback model
    * @param {object} options - Same as createMessage
-   * @param {number} maxRetries - Maximum retry attempts
+   * @param {number} maxRetries - Maximum retry attempts per model
    * @returns {Promise<object>} - Claude API response
    */
-  async createMessageWithRetry(options, maxRetries = 3) {
+  async createMessageWithRetry(options, maxRetries = 5) {
+    let lastError = null;
+    let usedFallback = false;
+
+    // Try primary model first
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         return await this.createMessage(options);
       } catch (error) {
+        lastError = error;
+
         // Check if it's a rate limit error (429)
         if (error.status === 429 && attempt < maxRetries - 1) {
           const waitTime = Math.pow(2, attempt) * 1000; // Exponential backoff
-          console.log(`Rate limited, waiting ${waitTime}ms before retry...`);
+          console.log(`[Claude] Rate limited, waiting ${waitTime}ms before retry (attempt ${attempt + 1}/${maxRetries})...`);
           await this.sleep(waitTime);
           continue;
         }
 
-        // Check for overloaded error
+        // Check for overloaded error (529)
         if (error.status === 529 && attempt < maxRetries - 1) {
           const waitTime = Math.pow(2, attempt) * 2000;
-          console.log(`API overloaded, waiting ${waitTime}ms before retry...`);
+          console.log(`[Claude] API overloaded, waiting ${waitTime}ms before retry (attempt ${attempt + 1}/${maxRetries})...`);
           await this.sleep(waitTime);
           continue;
         }
 
-        throw error;
+        // For other errors, don't retry
+        if (error.status !== 429 && error.status !== 529) {
+          throw error;
+        }
       }
     }
 
-    throw new Error('Max retries exceeded for Claude API');
+    // If primary model exhausted retries due to overload, try fallback model
+    if (lastError?.status === 529 && this.model !== this.fallbackModel) {
+      console.log(`[Claude] Primary model (${this.model}) overloaded after ${maxRetries} attempts. Falling back to ${this.fallbackModel}...`);
+      usedFallback = true;
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const response = await this.createMessage({ ...options, model: this.fallbackModel });
+          console.log(`[Claude] Fallback to ${this.fallbackModel} succeeded`);
+          return response;
+        } catch (error) {
+          lastError = error;
+
+          if (error.status === 529 && attempt < maxRetries - 1) {
+            const waitTime = Math.pow(2, attempt) * 2000;
+            console.log(`[Claude] Fallback model overloaded, waiting ${waitTime}ms (attempt ${attempt + 1}/${maxRetries})...`);
+            await this.sleep(waitTime);
+            continue;
+          }
+
+          if (error.status !== 429 && error.status !== 529) {
+            throw error;
+          }
+        }
+      }
+    }
+
+    // All retries exhausted
+    const modelInfo = usedFallback ? `${this.model} and fallback ${this.fallbackModel}` : this.model;
+    throw new Error(`Max retries exceeded for Claude API (tried ${modelInfo})`);
   }
 
   sleep(ms) {
