@@ -93,16 +93,33 @@ Other Income, Taxes, Depreciation and Amortization, Stock Comp Expense, Interest
 
 ---
 
-## Pre-Calculated Metrics (MUST USE)
+## Metrics Tab (USE FIRST)
 
-The \`calculated_metrics\` object in query responses contains:
+The Metrics tab contains authoritative pre-calculated values. **Query these FIRST before calculating from income statement.**
+
+Available metrics (by Metric Name):
+- **Net Revenue** — Primary revenue metric
+- **Net Messaging Revenue** — Messaging revenue minus carrier fees
+- **Gross Profit** — Net Revenue minus COGS
+- **EBITDA** — Earnings before interest, taxes, depreciation, amortization
+- **Ending Cash** — Month-end cash balance
+
+Query with: \`{ Statement: "metrics", "Metric Name": "Net Revenue", Type: "actuals", Year: "2025" }\`
+
+Each metric has Type: "actuals" or "budget" — always specify.
+
+---
+
+## Calculated Metrics (Fallback)
+
+If a metric isn't in the Metrics tab, the \`calculated_metrics\` object in income statement query responses contains:
 - \`gross_revenue\`, \`carrier_fees\`, \`net_revenue\`
 - \`total_cogs\`, \`gross_profit\`, \`gross_margin_pct\`
 - \`total_opex\`, \`ebitda\`, \`ebitda_margin_pct\`
 - \`quarterly_net_revenue\` (Q1, Q2, Q3, Q4)
 - \`monthly_net_revenue\` (Jan, Feb, etc.)
 
-**Always use these values. Do NOT do your own arithmetic — it causes errors.**
+**Use Metrics tab values when available. Use calculated_metrics as fallback. Do NOT do your own arithmetic.**
 
 ---
 
