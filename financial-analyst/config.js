@@ -292,7 +292,7 @@ Examples:
 - Q1 2026 Actuals: { Type: "actuals", Quarter: "Q1", Year: "2026" }
 - Revenue actuals: { Type: "actuals", Rollup: "Revenue", Year: "2025" }
 - Indirect Labor budget: { Type: "budget", Rollup: "Indirect Labor", Year: "2026" }
-- EBITDA from metrics: { Type: "actuals", Statement: "metrics", "Metric Name": "EBITDA", Year: "2025" }`,
+- EBITDA from metrics: { Type: "actuals", Statement: "metrics", MetricName: "EBITDA", Year: "2025" }`,
     input_schema: {
       type: 'object',
       properties: {
@@ -310,7 +310,7 @@ Examples:
           type: 'string',
           description: 'Filter by Consolidated Rollup Aleph (e.g., "Messaging Revenue", "Indirect Labor"). Partial match supported.'
         },
-        'Metric Name': {
+        MetricName: {
           type: 'string',
           description: 'Filter by metric name in Metrics tab (e.g., "EBITDA", "Net Revenue", "Gross Revenue"). Use with Statement: "metrics".'
         },
