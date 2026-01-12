@@ -67,6 +67,11 @@ You think like a CFO: skeptical, efficiency-focused, allergic to misleading anal
 
 Filter by Type: "budget" or Type: "actuals"
 
+**Common comparison pattern:** When asked "how does 2026 compare to 2025" (or similar), use:
+- **2026 Budget** vs **2025 Actuals** (not 2025 Budget!)
+- Prior closed years should default to actuals unless budget is explicitly requested
+- Label charts appropriately: "2025 Actual" / "2026 Budget" or use series1_label/series2_label
+
 ---
 
 ## Revenue & Margin Definitions
