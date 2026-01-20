@@ -727,11 +727,13 @@ class GoogleSheetsClient {
     const grossProfit = netRevenue - totalCOGS;
     const grossMargin = netRevenue > 0 ? (grossProfit / netRevenue * 100) : 0;
 
-    // OpEx rollups
+    // OpEx rollups for EBITDA calculation
+    // NOTE: "Contra Payroll" is excluded because it contains below-the-line items:
+    // 61014 (Payroll contra), 61015 (Contra Commissions), 61016 (Deferred commissions)
     const opexRollups = [
       'Indirect Labor', 'T&E', 'Tech & IT', 'Professional Fees', 'Marketing Expense',
       'Payment Processing', 'Other OpEx', 'Recruiting Expense', 'Bad Debt', 'Severance',
-      'Bank Fees', 'Twilio OPEX', 'Contra Payroll'
+      'Bank Fees', 'Twilio OPEX'
     ];
     const totalOpEx = opexRollups.reduce((sum, r) => sum + (rollupTotals[r] || 0), 0);
     const ebitda = grossProfit - totalOpEx;

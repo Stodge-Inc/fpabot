@@ -108,8 +108,11 @@ Twilio Carrier Fees
 **COGS Rollups** (8 total):
 Hosting, Twilio Messaging, Twilio Short Codes, SMS Sales COGS, Prepaid Cards, Postscript Plus Servicing Costs, CXAs Servicing Costs, MAI OpenAI Costs
 
-**OpEx Rollups** (13 total):
-Indirect Labor, T&E, Tech & IT, Professional Fees, Marketing Expense, Payment Processing, Other OpEx, Recruiting Expense, Bad Debt, Severance, Bank Fees, Twilio OPEX, Contra Payroll
+**OpEx Rollups** (12 total):
+Indirect Labor, T&E, Tech & IT, Professional Fees, Marketing Expense, Payment Processing, Other OpEx, Recruiting Expense, Bad Debt, Severance, Bank Fees, Twilio OPEX
+
+**Below-the-line (excluded from EBITDA):**
+Contra Payroll (contains deferred commissions, contra expenses)
 
 **Other Income/Expense:**
 Other Income, Taxes, Depreciation and Amortization, Stock Comp Expense, Interest Expense, Other Expenses, Other Expense, Capitalized Software, Depreciation Expense
